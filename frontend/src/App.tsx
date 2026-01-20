@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import AuthIndividual from "./pages/AuthIndividual";
 import AuthEnterprise from "./pages/AuthEnterprise";
+import SignIn from "./pages/SignIn";
+import Dashboard from "./pages/Dashboard";
 import KYCFlow from "./pages/KYCFlow";
 import NotFound from "./pages/NotFound";
 
@@ -21,6 +23,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth/individual" element={<AuthIndividual />} />
           <Route path="/auth/enterprise" element={<AuthEnterprise />} />
+          <Route path="/auth/signin" element={<SignIn />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/kyc" element={<KYCFlow />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
