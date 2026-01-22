@@ -35,21 +35,38 @@ const SignIn = () => {
         }
     };
 
-    const handleVerifyOTP = (e: React.FormEvent) => {
+    const handleEnterpriseLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (otp.length === 6) {
-            // For login, go directly to dashboard (no KYC)
-            navigate("/dashboard");
-        }
-    };
 
-    const handleEnterpriseLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (email && password) {
-            // Simulate enterprise login - go to dashboard
-            navigate("/dashboard");
+        try {
+            const res = await fetch("http://localhost:8000/login/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+         },
+            body: JSON.stringify({
+                email,
+                password,
+            }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Login failed");
         }
-    };
+
+        const data = await res.json();
+
+        // Store token
+        localStorage.setItem("access_token", data.access_token);
+
+        // Redirect
+        navigate("/dashboard");
+    } catch (error: any) {
+        alert(error.message || "Invalid credentials");
+    }
+};
+
 
     const resetIndividualForm = () => {
         setIndividualStep("phone");
