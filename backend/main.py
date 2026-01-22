@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routes.auth import router 
+from routes.mock_otp import router
+
 
 app = FastAPI()
 
@@ -10,4 +13,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(router,prefix="")
+app.include_router(router , prefix="")
+
 
