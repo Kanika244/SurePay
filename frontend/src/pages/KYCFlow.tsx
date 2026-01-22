@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield } from "lucide-react";
-import KYCProgress from "@/components/kyc/KYCProgress";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import EnterpriseKYCProgress from "@/components/enterprise-kyc/EnterpriseKYCProgress";
 import KYCIntro from "@/components/kyc/KYCIntro";
 import KYCPersonalDetails from "@/components/kyc/KYCPersonalDetails";
 import KYCPanVerification from "@/components/kyc/KYCPanVerification";
 import KYCAadhaarVerification from "@/components/kyc/KYCAadhaarVerification";
 import KYCSelfieCapture from "@/components/kyc/KYCSelfieCapture";
+import KYCPasswordStep from "@/components/kyc/KYCPasswordStep";
 import KYCReviewConsent from "@/components/kyc/KYCReviewConsent";
 import KYCStatus from "@/components/kyc/KYCStatus";
+import logo from "@/assets/logo.jpg";
 
-type KYCStep = 'intro' | 'personal' | 'pan' | 'aadhaar' | 'selfie' | 'review' | 'status';
+type KYCStep = 'intro' | 'personal' | 'pan' | 'aadhaar' | 'selfie' | 'password' | 'review' | 'status';
 
 interface KYCData {
   // Personal Details
@@ -20,24 +22,29 @@ interface KYCData {
   gender: string;
   address: string;
   sameAsAadhaar: boolean;
-  
+
   // PAN
+  panImage: File | null;
   panNumber: string;
-  
+  panName: string;
+
   // Aadhaar
   aadhaar: {
-    method: 'otp' | 'upload' | null;
-    aadhaarNumber: string;
     frontImage: File | null;
     backImage: File | null;
-    otp: string;
   };
-  
+  aadhaarNumber: string;
+  aadhaarName: string;
+
   // Selfie
   selfie: {
     selfieImage: string | null;
     livenessCompleted: boolean;
   };
+
+  // Password
+  password: string;
+  confirmPassword: string;
 }
 
 const initialData: KYCData = {
@@ -46,22 +53,25 @@ const initialData: KYCData = {
   gender: '',
   address: '',
   sameAsAadhaar: false,
+  panImage: null,
   panNumber: '',
+  panName: '',
   aadhaar: {
-    method: null,
-    aadhaarNumber: '',
     frontImage: null,
     backImage: null,
-    otp: '',
   },
+  aadhaarNumber: '',
+  aadhaarName: '',
   selfie: {
     selfieImage: null,
     livenessCompleted: false,
   },
+  password: '',
+  confirmPassword: '',
 };
 
-const STEPS: KYCStep[] = ['intro', 'personal', 'pan', 'aadhaar', 'selfie', 'review', 'status'];
-const STEP_LABELS = ['Start', 'Details', 'PAN', 'Aadhaar', 'Selfie', 'Review', 'Done'];
+const STEPS: KYCStep[] = ['intro', 'personal', 'pan', 'aadhaar', 'selfie', 'password', 'review', 'status'];
+const STEP_LABELS = ['Start', 'Details', 'PAN', 'Aadhaar', 'Selfie', 'Password', 'Review', 'Done'];
 
 const KYCFlow = () => {
   const [currentStep, setCurrentStep] = useState<KYCStep>('intro');
@@ -88,8 +98,26 @@ const KYCFlow = () => {
     }
   };
 
-  const handleSkip = () => {
-    navigate('/');
+  // Simulate OCR extraction when moving from aadhaar step
+  const handleAadhaarContinue = () => {
+    // Mock OCR extraction
+    setData(prev => ({
+      ...prev,
+      aadhaarNumber: '123456789012',
+      aadhaarName: prev.fullName || 'JOHN DOE',
+    }));
+    goNext();
+  };
+
+  // Simulate OCR extraction when moving from pan step
+  const handlePanContinue = () => {
+    // Mock OCR extraction
+    setData(prev => ({
+      ...prev,
+      panNumber: 'ABCDE1234F',
+      panName: prev.fullName || 'JOHN DOE',
+    }));
+    goNext();
   };
 
   const handleSubmit = () => {
@@ -98,47 +126,53 @@ const KYCFlow = () => {
     goToStep('status');
   };
 
-  const maskAadhaar = (aadhaar: string): string => {
-    if (aadhaar.length < 12) return aadhaar;
-    return `XXXX-XXXX-${aadhaar.slice(-4)}`;
-  };
-
   const showProgress = currentStep !== 'intro' && currentStep !== 'status';
+  const showBackToHome = currentStep === 'intro';
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          {currentStep !== 'intro' && currentStep !== 'status' ? (
-            <button
-              onClick={goBack}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm font-medium hidden sm:inline">Back</span>
-            </button>
-          ) : (
-            <div className="w-20" />
-          )}
-          
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="font-bold text-foreground">SurePay</span>
+      <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
+        <div className="container flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            {showBackToHome && (
+              <Link
+                to="/"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to home
+              </Link>
+            )}
+            {!showBackToHome && currentStep !== 'status' && (
+              <button
+                onClick={goBack}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="text-sm font-medium hidden sm:inline">Back</span>
+              </button>
+            )}
           </div>
-          
+
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="SurePay Logo" className="w-8 h-8 rounded-lg object-cover" />
+            <span className="font-semibold text-lg">SurePay</span>
+          </Link>
+
           <div className="w-20" />
         </div>
       </header>
 
       {/* Progress */}
       {showProgress && (
-        <div className="container mx-auto max-w-lg">
-          <KYCProgress
-            currentStep={currentStepIndex - 1}
-            totalSteps={STEPS.length - 2}
-            steps={STEP_LABELS.slice(1, -1)}
-          />
+        <div className="border-b bg-background">
+          <div className="container max-w-4xl mx-auto">
+            <EnterpriseKYCProgress
+              currentStep={currentStepIndex}
+              steps={STEP_LABELS}
+            />
+          </div>
         </div>
       )}
 
@@ -147,7 +181,7 @@ const KYCFlow = () => {
         <AnimatePresence mode="wait">
           {currentStep === 'intro' && (
             <motion.div key="intro">
-              <KYCIntro onStart={goNext} onSkip={handleSkip} />
+              <KYCIntro onStart={goNext} />
             </motion.div>
           )}
 
@@ -171,9 +205,9 @@ const KYCFlow = () => {
           {currentStep === 'pan' && (
             <motion.div key="pan">
               <KYCPanVerification
-                panNumber={data.panNumber}
-                onUpdate={(pan) => setData({ ...data, panNumber: pan })}
-                onContinue={goNext}
+                panImage={data.panImage}
+                onUpdate={(file) => setData({ ...data, panImage: file })}
+                onContinue={handlePanContinue}
                 onBack={goBack}
               />
             </motion.div>
@@ -184,7 +218,7 @@ const KYCFlow = () => {
               <KYCAadhaarVerification
                 data={data.aadhaar}
                 onUpdate={(aadhaarData) => setData({ ...data, aadhaar: aadhaarData })}
-                onContinue={goNext}
+                onContinue={handleAadhaarContinue}
                 onBack={goBack}
               />
             </motion.div>
@@ -201,6 +235,19 @@ const KYCFlow = () => {
             </motion.div>
           )}
 
+          {currentStep === 'password' && (
+            <motion.div key="password">
+              <KYCPasswordStep
+                password={data.password}
+                confirmPassword={data.confirmPassword}
+                onUpdatePassword={(password) => setData({ ...data, password })}
+                onUpdateConfirmPassword={(confirmPassword) => setData({ ...data, confirmPassword })}
+                onContinue={goNext}
+                onBack={goBack}
+              />
+            </motion.div>
+          )}
+
           {currentStep === 'review' && (
             <motion.div key="review">
               <KYCReviewConsent
@@ -209,7 +256,9 @@ const KYCFlow = () => {
                   dob: data.dob,
                   address: data.address,
                   panNumber: data.panNumber,
-                  aadhaarMasked: maskAadhaar(data.aadhaar.aadhaarNumber),
+                  panName: data.panName,
+                  aadhaarNumber: data.aadhaarNumber,
+                  aadhaarName: data.aadhaarName,
                   selfieImage: data.selfie.selfieImage,
                 }}
                 onSubmit={handleSubmit}

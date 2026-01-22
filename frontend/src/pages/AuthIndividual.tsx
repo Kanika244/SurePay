@@ -10,6 +10,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import logo from "@/assets/logo.jpg";
 
 type Step = "phone" | "otp";
 
@@ -58,9 +59,7 @@ const AuthIndividual = () => {
 
           {/* Logo */}
           <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">S</span>
-            </div>
+            <img src={logo} alt="SurePay Logo" className="w-10 h-10 rounded-xl object-cover" />
             <span className="text-2xl font-bold text-foreground">SurePay</span>
           </div>
 
@@ -183,7 +182,7 @@ const AuthIndividual = () => {
       <div className="hidden lg:flex flex-1 gradient-hero items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 animated-grid" />
         <div className="glow-orb w-[400px] h-[400px] bg-primary/20" />
-        
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -197,7 +196,7 @@ const AuthIndividual = () => {
             Digital money, made simple
           </h2>
           <p className="text-muted-foreground max-w-sm">
-            Send, receive, and manage your digital payments with ease. 
+            Send, receive, and manage your digital payments with ease.
             Your wallet is ready in seconds.
           </p>
         </motion.div>

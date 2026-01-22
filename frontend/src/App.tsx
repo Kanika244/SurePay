@@ -9,6 +9,8 @@ import AuthEnterprise from "./pages/AuthEnterprise";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import KYCFlow from "./pages/KYCFlow";
+import EnterpriseOnboarding from "./pages/EnterpriseOnboarding";
+import EnterpriseDashboard from "./pages/EnterpriseDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/auth/signin" element={<SignIn />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/kyc" element={<KYCFlow />} />
+          <Route path="/enterprise/onboarding" element={<EnterpriseOnboarding />} />
+          <Route path="/enterprise/dashboard" element={<EnterpriseDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

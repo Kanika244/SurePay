@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { User, CreditCard, Fingerprint, Camera, Check, ChevronRight, ExternalLink } from "lucide-react";
+import { User, CreditCard, Fingerprint, Camera, Check, ChevronRight, ExternalLink, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReviewData {
@@ -11,7 +11,9 @@ interface ReviewData {
   dob: string;
   address: string;
   panNumber: string;
-  aadhaarMasked: string;
+  panName: string;
+  aadhaarNumber: string;
+  aadhaarName: string;
   selfieImage: string | null;
 }
 
@@ -25,6 +27,11 @@ const KYCReviewConsent = ({ data, onSubmit, onBack }: KYCReviewConsentProps) => 
   const [confirmInfo, setConfirmInfo] = useState(false);
   const [consentVerify, setConsentVerify] = useState(false);
 
+  const maskAadhaar = (aadhaar: string): string => {
+    if (aadhaar.length < 12) return aadhaar;
+    return `XXXX-XXXX-${aadhaar.slice(-4)}`;
+  };
+
   const sections = [
     {
       icon: User,
@@ -37,16 +44,20 @@ const KYCReviewConsent = ({ data, onSubmit, onBack }: KYCReviewConsentProps) => 
     },
     {
       icon: CreditCard,
-      title: "PAN Details",
+      title: "PAN Details (OCR Extracted)",
+      badge: "Auto-extracted",
       items: [
         { label: "PAN Number", value: data.panNumber },
+        { label: "Name on PAN", value: data.panName },
       ],
     },
     {
       icon: Fingerprint,
-      title: "Aadhaar Details",
+      title: "Aadhaar Details (OCR Extracted)",
+      badge: "Auto-extracted",
       items: [
-        { label: "Aadhaar Number", value: data.aadhaarMasked },
+        { label: "Aadhaar Number", value: maskAadhaar(data.aadhaarNumber) },
+        { label: "Name on Aadhaar", value: data.aadhaarName },
       ],
     },
   ];
@@ -79,8 +90,15 @@ const KYCReviewConsent = ({ data, onSubmit, onBack }: KYCReviewConsentProps) => 
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <section.icon className="w-4 h-4 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground">{section.title}</h3>
-              <div className="ml-auto w-5 h-5 rounded-full bg-mint flex items-center justify-center">
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground">{section.title}</h3>
+                {section.badge && (
+                  <span className="text-xs text-mint bg-mint/10 px-2 py-0.5 rounded-full">
+                    {section.badge}
+                  </span>
+                )}
+              </div>
+              <div className="w-5 h-5 rounded-full bg-mint flex items-center justify-center">
                 <Check className="w-3 h-3 text-mint-foreground" />
               </div>
             </div>

@@ -151,7 +151,7 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
             </div>
 
             <Button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/dashboard')}
               className="w-full h-12 gradient-primary hover:opacity-90"
             >
               Go to Dashboard
@@ -176,9 +176,8 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
                 {timeline.map((step, index) => (
                   <div key={step.label} className="flex items-start gap-4 mb-4 last:mb-0">
                     <div className="relative">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        step.completed ? 'bg-mint' : 'bg-muted'
-                      }`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${step.completed ? 'bg-mint' : 'bg-muted'
+                        }`}>
                         {step.completed ? (
                           <Check className="w-3 h-3 text-mint-foreground" />
                         ) : (
@@ -186,15 +185,13 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
                         )}
                       </div>
                       {index < timeline.length - 1 && (
-                        <div className={`absolute left-1/2 top-6 w-0.5 h-8 -translate-x-1/2 ${
-                          step.completed ? 'bg-mint' : 'bg-muted'
-                        }`} />
+                        <div className={`absolute left-1/2 top-6 w-0.5 h-8 -translate-x-1/2 ${step.completed ? 'bg-mint' : 'bg-muted'
+                          }`} />
                       )}
                     </div>
                     <div className="flex-1 pb-4">
-                      <p className={`text-sm font-medium ${
-                        step.completed ? 'text-foreground' : 'text-muted-foreground'
-                      }`}>
+                      <p className={`text-sm font-medium ${step.completed ? 'text-foreground' : 'text-muted-foreground'
+                        }`}>
                         {step.label}
                       </p>
                     </div>
@@ -217,7 +214,7 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
             </div>
 
             <Button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/dashboard')}
               variant="outline"
               className="w-full h-12"
             >
@@ -267,7 +264,7 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
 
             <div className="flex gap-3">
               <Button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/dashboard')}
                 variant="outline"
                 className="flex-1 h-12"
               >

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Github, FileText, Info } from "lucide-react";
+import logo from "@/assets/logo.jpg";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -16,9 +17,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">S</span>
-            </div>
+            <img src={logo} alt="SurePay Logo" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-lg font-semibold">SurePay</span>
           </div>
 
@@ -58,7 +57,7 @@ const Footer = () => {
         {/* Disclaimer */}
         <div className="mt-8 pt-6 border-t border-primary-foreground/10">
           <p className="text-xs text-primary-foreground/40 text-center max-w-2xl mx-auto">
-            CBDC interactions shown here are simulated for demonstration purposes. 
+            CBDC interactions shown here are simulated for demonstration purposes.
             SurePay is a conceptual product designed to illustrate digital payment capabilities.
           </p>
         </div>

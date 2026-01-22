@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.jpg";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,9 +38,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">S</span>
-            </div>
+            <img src={logo} alt="SurePay Logo" className="w-9 h-9 rounded-xl object-cover" />
             <span className="text-xl font-bold text-foreground">SurePay</span>
           </Link>
 
@@ -58,11 +57,8 @@ const Header = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/auth/signin">Sign in</Link>
-            </Button>
             <Button variant="default" size="sm" asChild>
-              <Link to="/auth/individual">Get Started</Link>
+              <Link to="/auth/signin">Login</Link>
             </Button>
           </div>
 
@@ -95,11 +91,8 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/auth/signin">Sign in</Link>
-                </Button>
                 <Button variant="default" size="sm" asChild>
-                  <Link to="/auth/individual">Get Started</Link>
+                  <Link to="/auth/signin">Login</Link>
                 </Button>
               </div>
             </nav>

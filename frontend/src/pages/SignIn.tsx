@@ -5,22 +5,14 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Smartphone, Building2, ArrowRight, Lock, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import {
-    InputOTP,
-    InputOTPGroup,
-    InputOTPSlot,
-} from "@/components/ui/input-otp";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-type IndividualStep = "phone" | "otp";
+import logo from "@/assets/logo.jpg";
 
 const SignIn = () => {
     const navigate = useNavigate();
 
     // Individual login state
-    const [individualStep, setIndividualStep] = useState<IndividualStep>("phone");
     const [phone, setPhone] = useState("");
-    const [otp, setOtp] = useState("");
 
     // Enterprise login state
     const [email, setEmail] = useState("");
@@ -28,17 +20,11 @@ const SignIn = () => {
 
     const [activeTab, setActiveTab] = useState<string>("individual");
 
-    const handleSendOTP = (e: React.FormEvent) => {
+    const handleVerifyNumber = (e: React.FormEvent) => {
         e.preventDefault();
         if (phone.length >= 10) {
-            setIndividualStep("otp");
-        }
-    };
-
-    const handleVerifyOTP = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (otp.length === 6) {
-            // For login, go directly to dashboard (no KYC)
+            // Simulate backend check - if number exists, go to dashboard
+            // For now, always redirect to dashboard
             navigate("/dashboard");
         }
     };
@@ -46,14 +32,9 @@ const SignIn = () => {
     const handleEnterpriseLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (email && password) {
-            // Simulate enterprise login - go to dashboard
-            navigate("/dashboard");
+            // Simulate enterprise login - go to enterprise dashboard
+            navigate("/enterprise/dashboard");
         }
-    };
-
-    const resetIndividualForm = () => {
-        setIndividualStep("phone");
-        setOtp("");
     };
 
     return (
@@ -63,24 +44,16 @@ const SignIn = () => {
                 <div className="max-w-md mx-auto w-full">
                     {/* Back Link */}
                     <Link
-                        to={individualStep === "otp" && activeTab === "individual" ? "#" : "/"}
-                        onClick={(e) => {
-                            if (individualStep === "otp" && activeTab === "individual") {
-                                e.preventDefault();
-                                resetIndividualForm();
-                            }
-                        }}
+                        to="/"
                         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
                     >
                         <ArrowLeft size={16} />
-                        {individualStep === "otp" && activeTab === "individual" ? "Change number" : "Back to home"}
+                        Back to home
                     </Link>
 
                     {/* Logo */}
                     <div className="flex items-center gap-2 mb-8">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                            <span className="text-primary-foreground font-bold text-xl">S</span>
-                        </div>
+                        <img src={logo} alt="SurePay Logo" className="w-10 h-10 rounded-xl object-cover" />
                         <span className="text-2xl font-bold text-foreground">SurePay</span>
                     </div>
 
@@ -91,10 +64,7 @@ const SignIn = () => {
                         Sign in to access your account
                     </p>
 
-                    <Tabs value={activeTab} onValueChange={(val) => {
-                        setActiveTab(val);
-                        resetIndividualForm();
-                    }} className="w-full">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-2 mb-6">
                             <TabsTrigger value="individual" className="flex items-center gap-2">
                                 <Smartphone size={16} />
@@ -107,111 +77,49 @@ const SignIn = () => {
                         </TabsList>
 
                         <TabsContent value="individual">
-                            <AnimatePresence mode="wait">
-                                {individualStep === "phone" ? (
-                                    <motion.div
-                                        key="phone-step"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        {/* Phone Icon Indicator */}
-                                        <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                <Smartphone className="text-primary" size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-foreground">Mobile Verification</p>
-                                                <p className="text-xs text-muted-foreground">We'll send you a one-time password</p>
-                                            </div>
-                                        </div>
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {/* Phone Icon Indicator */}
+                                <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Smartphone className="text-primary" size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">Mobile Verification</p>
+                                        <p className="text-xs text-muted-foreground">Enter your registered mobile number</p>
+                                    </div>
+                                </div>
 
-                                        {/* Form */}
-                                        <form className="space-y-4" onSubmit={handleSendOTP}>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="phone">Mobile Number</Label>
-                                                <Input
-                                                    id="phone"
-                                                    type="tel"
-                                                    placeholder="+91 98765 43210"
-                                                    className="h-12"
-                                                    value={phone}
-                                                    onChange={(e) => setPhone(e.target.value)}
-                                                />
-                                            </div>
+                                {/* Form */}
+                                <form className="space-y-4" onSubmit={handleVerifyNumber}>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="phone">Mobile Number</Label>
+                                        <Input
+                                            id="phone"
+                                            type="tel"
+                                            placeholder="+91 98765 43210"
+                                            className="h-12"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                        />
+                                    </div>
 
-                                            <Button variant="hero" size="lg" className="w-full gap-2" type="submit">
-                                                Send OTP
-                                                <ArrowRight size={18} />
-                                            </Button>
-                                        </form>
+                                    <Button variant="hero" size="lg" className="w-full gap-2" type="submit">
+                                        Verify Number
+                                        <ArrowRight size={18} />
+                                    </Button>
+                                </form>
 
-                                        <p className="text-sm text-muted-foreground text-center mt-6">
-                                            Don't have an account?{" "}
-                                            <Link to="/auth/individual" className="text-primary hover:underline font-medium">
-                                                Sign up
-                                            </Link>
-                                        </p>
-                                    </motion.div>
-                                ) : (
-                                    <motion.div
-                                        key="otp-step"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <p className="text-muted-foreground mb-6">
-                                            Enter the 6-digit code sent to <span className="font-medium text-foreground">{phone}</span>
-                                        </p>
-
-                                        {/* OTP Form */}
-                                        <form className="space-y-6" onSubmit={handleVerifyOTP}>
-                                            <div className="space-y-3">
-                                                <Label>One-Time Password</Label>
-                                                <div className="flex justify-center">
-                                                    <InputOTP
-                                                        maxLength={6}
-                                                        value={otp}
-                                                        onChange={(value) => setOtp(value)}
-                                                    >
-                                                        <InputOTPGroup>
-                                                            <InputOTPSlot index={0} className="w-12 h-14 text-lg" />
-                                                            <InputOTPSlot index={1} className="w-12 h-14 text-lg" />
-                                                            <InputOTPSlot index={2} className="w-12 h-14 text-lg" />
-                                                            <InputOTPSlot index={3} className="w-12 h-14 text-lg" />
-                                                            <InputOTPSlot index={4} className="w-12 h-14 text-lg" />
-                                                            <InputOTPSlot index={5} className="w-12 h-14 text-lg" />
-                                                        </InputOTPGroup>
-                                                    </InputOTP>
-                                                </div>
-                                            </div>
-
-                                            <Button
-                                                variant="hero"
-                                                size="lg"
-                                                className="w-full"
-                                                type="submit"
-                                                disabled={otp.length !== 6}
-                                            >
-                                                Sign In
-                                            </Button>
-                                        </form>
-
-                                        <p className="text-sm text-muted-foreground text-center mt-6">
-                                            Didn't receive the code?{" "}
-                                            <button
-                                                type="button"
-                                                className="text-primary hover:underline font-medium"
-                                                onClick={() => console.log("Resend OTP")}
-                                            >
-                                                Resend OTP
-                                            </button>
-                                        </p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                <p className="text-sm text-muted-foreground text-center mt-6">
+                                    Don't have an account?{" "}
+                                    <Link to="/auth/individual" className="text-primary hover:underline font-medium">
+                                        Sign up
+                                    </Link>
+                                </p>
+                            </motion.div>
                         </TabsContent>
 
                         <TabsContent value="enterprise">
@@ -280,8 +188,8 @@ const SignIn = () => {
 
                                 <p className="text-sm text-muted-foreground text-center mt-6">
                                     Need an enterprise account?{" "}
-                                    <Link to="/auth/enterprise" className="text-accent hover:underline font-medium">
-                                        Contact sales
+                                    <Link to="/enterprise/onboarding" className="text-accent hover:underline font-medium">
+                                        Get started
                                     </Link>
                                 </p>
                             </motion.div>

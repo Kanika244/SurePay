@@ -9,7 +9,7 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero">
       {/* Animated Grid Background */}
       <div className="absolute inset-0 animated-grid" />
-      
+
       {/* Glowing Orbs */}
       <div className="glow-orb w-[600px] h-[600px] -top-64 -right-64 bg-primary/20" />
       <div className="glow-orb w-[500px] h-[500px] -bottom-32 -left-32 bg-accent/20 animation-delay-2000" />
@@ -53,7 +53,7 @@ const HeroSection = () => {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8"
             >
-              Pay anyone, anywhere—instantly. No bank account required. 
+              Pay anyone, anywhere—instantly. No bank account required.
               SurePay brings secure digital payments to individuals, merchants, and enterprises.
             </motion.p>
 
@@ -72,7 +72,7 @@ const HeroSection = () => {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <Link to="/auth/enterprise" className="gap-2">
+                <Link to="/enterprise/onboarding" className="gap-2">
                   <Building2 size={20} />
                   Get started as Enterprise
                 </Link>
@@ -115,7 +115,7 @@ const HeroSection = () => {
                 alt="Digital wallet payments illustration"
                 className="w-full max-w-2xl mx-auto rounded-3xl shadow-2xl"
               />
-              
+
               {/* Floating Cards */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

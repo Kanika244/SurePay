@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Shield, Clock, Lock, AlertCircle } from "lucide-react";
+import { Shield, Clock, Lock } from "lucide-react";
 
 interface KYCIntroProps {
   onStart: () => void;
-  onSkip?: () => void;
 }
 
-const KYCIntro = ({ onStart, onSkip }: KYCIntroProps) => {
+const KYCIntro = ({ onStart }: KYCIntroProps) => {
   const features = [
     {
       icon: Clock,
@@ -57,7 +56,7 @@ const KYCIntro = ({ onStart, onSkip }: KYCIntroProps) => {
         transition={{ delay: 0.4 }}
         className="text-muted-foreground mb-8 max-w-sm"
       >
-        KYC is required to enable payments and unlock higher transaction limits
+        KYC is mandatory to enable payments and unlock all features
       </motion.p>
 
       {/* Features */}
@@ -83,12 +82,12 @@ const KYCIntro = ({ onStart, onSkip }: KYCIntroProps) => {
         ))}
       </motion.div>
 
-      {/* CTAs */}
+      {/* CTA */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.9 }}
-        className="w-full max-w-sm space-y-3"
+        className="w-full max-w-sm"
       >
         <Button
           onClick={onStart}
@@ -96,33 +95,7 @@ const KYCIntro = ({ onStart, onSkip }: KYCIntroProps) => {
         >
           Start KYC
         </Button>
-
-        {onSkip && (
-          <button
-            onClick={onSkip}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Do it later
-          </button>
-        )}
       </motion.div>
-
-      {/* Warning for skip */}
-      {onSkip && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-6 p-3 rounded-lg bg-destructive/5 border border-destructive/20 max-w-sm"
-        >
-          <div className="flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-destructive/80 text-left">
-              Without KYC, you'll have limited access to payments and lower transaction limits.
-            </p>
-          </div>
-        </motion.div>
-      )}
     </motion.div>
   );
 };
