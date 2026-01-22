@@ -20,21 +20,54 @@ const AuthIndividual = () => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
 
-  const handleSendOTP = (e: React.FormEvent) => {
+
+
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length >= 10) {
+    try{
+    const res = await fetch("http://localhost:8000/auth/send_otp", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ phone }),
+    });
+
+    const data  = await res.json();
+
+    if (res.ok) {
+      console.log("Mock OTP:", data.otp); // For testing purposes
       setStep("otp");
+    }else{
+      alert(data.detail);
+
+    }
+  }catch(err){
+    console.error("Error sending OTP:", err);
+    alert("Failed to send OTP. Please try again.");
+
+  }
+};
+
+
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const res = await fetch("http://localhost:8000/auth/verify-otp", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ phone, otp }),
+    });
+    const data = await res.json();
+    if (data.is_new_user) {
+      // Navigate to KYC flow after successful verification
+      navigate("/kyc");
+    }else{
+      navigate("/dashboard");
+
     }
   };
 
-  const handleVerifyOTP = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simulate OTP verification - in production, verify with backend
-    if (otp.length === 6) {
-      // Navigate to KYC flow after successful verification
-      navigate("/kyc");
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-background flex">

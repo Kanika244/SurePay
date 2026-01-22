@@ -13,6 +13,7 @@ const SignIn = () => {
 
     // Individual login state
     const [phone, setPhone] = useState("");
+    const [otp,setOtp] = useState("");
 
     // Enterprise login state
     const [email, setEmail] = useState("");
@@ -23,18 +24,46 @@ const SignIn = () => {
     const handleVerifyNumber = (e: React.FormEvent) => {
         e.preventDefault();
         if (phone.length >= 10) {
-            // Simulate backend check - if number exists, go to dashboard
-            // For now, always redirect to dashboard
-            navigate("/dashboard");
+            setIndividualStep("otp");
         }
     };
 
-    const handleEnterpriseLogin = (e: React.FormEvent) => {
+    const handleEnterpriseLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email && password) {
-            // Simulate enterprise login - go to enterprise dashboard
-            navigate("/enterprise/dashboard");
+
+        try {
+            const res = await fetch("http://localhost:8000/login/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+         },
+            body: JSON.stringify({
+                email,
+                password,
+            }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Login failed");
         }
+
+        const data = await res.json();
+
+        // Store token
+        localStorage.setItem("access_token", data.access_token);
+
+        // Redirect
+        navigate("/dashboard");
+    } catch (error: any) {
+        alert(error.message || "Invalid credentials");
+    }
+};
+
+
+    const resetIndividualForm = () => {
+        setIndividualStep("phone");
+        setOtp("");
     };
 
     return (
@@ -225,3 +254,7 @@ const SignIn = () => {
 };
 
 export default SignIn;
+
+function setIndividualStep(arg0: string) {
+    throw new Error("Function not implemented.");
+}
