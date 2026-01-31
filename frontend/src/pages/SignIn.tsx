@@ -1,8 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Smartphone, Building2, ArrowRight, Lock, Mail } from "lucide-react";
+import { ArrowLeft, Smartphone, Building2, ArrowRight, Lock, Mail, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,57 +13,40 @@ const SignIn = () => {
 
     // Individual login state
     const [phone, setPhone] = useState("");
-    const [otp,setOtp] = useState("");
 
     // Enterprise login state
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+    // Admin login state
+    const [adminEmail, setAdminEmail] = useState("");
+    const [adminPassword, setAdminPassword] = useState("");
 
     const [activeTab, setActiveTab] = useState<string>("individual");
 
     const handleVerifyNumber = (e: React.FormEvent) => {
         e.preventDefault();
         if (phone.length >= 10) {
-            setIndividualStep("otp");
+            // Simulate backend check - if number exists, go to dashboard
+            // For now, always redirect to dashboard
+            navigate("/dashboard");
         }
     };
 
-    const handleEnterpriseLogin = async (e: React.FormEvent) => {
+    const handleEnterpriseLogin = (e: React.FormEvent) => {
         e.preventDefault();
-
-        try {
-            const res = await fetch("http://localhost:8000/login/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-         },
-            body: JSON.stringify({
-                email,
-                password,
-            }),
-        });
-
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || "Login failed");
+        if (email && password) {
+            // Simulate enterprise login - go to enterprise dashboard
+            navigate("/enterprise/dashboard");
         }
+    };
 
-        const data = await res.json();
-
-        // Store token
-        localStorage.setItem("access_token", data.access_token);
-
-        // Redirect
-        navigate("/dashboard");
-    } catch (error: any) {
-        alert(error.message || "Invalid credentials");
-    }
-};
-
-
-    const resetIndividualForm = () => {
-        setIndividualStep("phone");
-        setOtp("");
+    const handleAdminLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (adminEmail && adminPassword) {
+            // Simulate admin login - go to admin dashboard
+            navigate("/admin");
+        }
     };
 
     return (
@@ -94,7 +77,7 @@ const SignIn = () => {
                     </p>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 mb-6">
+                        <TabsList className="grid w-full grid-cols-3 mb-6">
                             <TabsTrigger value="individual" className="flex items-center gap-2">
                                 <Smartphone size={16} />
                                 Individual
@@ -102,6 +85,10 @@ const SignIn = () => {
                             <TabsTrigger value="enterprise" className="flex items-center gap-2">
                                 <Building2 size={16} />
                                 Enterprise
+                            </TabsTrigger>
+                            <TabsTrigger value="admin" className="flex items-center gap-2">
+                                <Shield size={16} />
+                                Admin
                             </TabsTrigger>
                         </TabsList>
 
@@ -223,6 +210,67 @@ const SignIn = () => {
                                 </p>
                             </motion.div>
                         </TabsContent>
+
+                        <TabsContent value="admin">
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {/* Admin Icon Indicator */}
+                                <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Shield className="text-primary" size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">Admin Login</p>
+                                        <p className="text-xs text-muted-foreground">Access the admin dashboard</p>
+                                    </div>
+                                </div>
+
+                                {/* Admin Login Form */}
+                                <form className="space-y-4" onSubmit={handleAdminLogin}>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="adminEmail">Admin Email</Label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                                            <Input
+                                                id="adminEmail"
+                                                type="email"
+                                                placeholder="admin@surepay.com"
+                                                className="h-12 pl-10"
+                                                value={adminEmail}
+                                                onChange={(e) => setAdminEmail(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="adminPassword">Password</Label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                                            <Input
+                                                id="adminPassword"
+                                                type="password"
+                                                placeholder="Enter admin password"
+                                                className="h-12 pl-10"
+                                                value={adminPassword}
+                                                onChange={(e) => setAdminPassword(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <Button size="lg" className="w-full gap-2" type="submit">
+                                        Access Admin Panel
+                                        <ArrowRight size={18} />
+                                    </Button>
+                                </form>
+
+                                <p className="text-xs text-muted-foreground text-center mt-6">
+                                    Admin access is restricted to authorized personnel only.
+                                </p>
+                            </motion.div>
+                        </TabsContent>
                     </Tabs>
                 </div>
             </div>
@@ -254,7 +302,3 @@ const SignIn = () => {
 };
 
 export default SignIn;
-
-function setIndividualStep(arg0: string) {
-    throw new Error("Function not implemented.");
-}
