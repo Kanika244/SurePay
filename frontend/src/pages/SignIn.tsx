@@ -27,9 +27,7 @@ const SignIn = () => {
     const handleVerifyNumber = (e: React.FormEvent) => {
         e.preventDefault();
         if (phone.length >= 10) {
-            // Simulate backend check - if number exists, go to dashboard
-            // For now, always redirect to dashboard
-            navigate("/dashboard");
+            navigate("/app");
         }
     };
 

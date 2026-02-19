@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Upload, Download, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
