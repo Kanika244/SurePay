@@ -1,7 +1,7 @@
 from fastapi import HTTPException , APIRouter
 from datetime import timedelta , datetime
 from models import PhoneOTPRequest , PhoneOTPVerify
-from utils import generate_otp
+from utils.utils import generate_otp
 from database import  individual_otp , individualusers
 
 router = APIRouter(prefix="/auth",tags=["Mock OTP"])
