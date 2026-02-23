@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EnterpriseSidebar from "./EnterpriseSidebar";
+import NotificationDropdown from "@/components/enterprise/NotificationDropdown";
 
 interface EnterpriseLayoutProps {
     children: React.ReactNode;
@@ -16,6 +18,13 @@ interface EnterpriseLayoutProps {
 }
 
 const EnterpriseLayout = ({ children, title, subtitle }: EnterpriseLayoutProps) => {
+    const navigate = useNavigate();
+
+    const handleSignOut = () => {
+        localStorage.clear();
+        window.location.href = "/login";
+    };
+
     return (
         <div className="min-h-screen bg-background">
             <EnterpriseSidebar />
@@ -23,10 +32,11 @@ const EnterpriseLayout = ({ children, title, subtitle }: EnterpriseLayoutProps) 
                 <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30 flex items-center justify-between px-6">
                     <div />
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" className="relative">
-                            <Bell size={20} />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-                        </Button>
+
+                        {/* Real notification bell with dropdown */}
+                        <NotificationDropdown />
+
+                        {/* Profile dropdown */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -36,10 +46,19 @@ const EnterpriseLayout = ({ children, title, subtitle }: EnterpriseLayoutProps) 
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem>Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Settings</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => navigate("/enterprise/profile")}>
+                                    Profile
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => navigate("/enterprise/settings")}>
+                                    Settings
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">Sign Out</DropdownMenuItem>
+                                <DropdownMenuItem
+                                    className="text-destructive"
+                                    onSelect={handleSignOut}
+                                >
+                                    Sign Out
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

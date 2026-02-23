@@ -20,6 +20,7 @@ export interface EnterpriseEmployee {
   spendingLimit: number;
   salaryBand?: string;
   status: 'active' | 'suspended';
+  kycVerified: boolean;
   twoFactorEnabled: boolean;
   lastLogin: string;
   createdAt: string;
@@ -93,7 +94,7 @@ export const enterpriseEmployees: EnterpriseEmployee[] = [
     govIdType: 'Aadhaar', govIdNumber: '1234 5678 9012',
     documents: [{ name: 'Aadhaar.pdf', type: 'Aadhaar', uploadedAt: '2024-01-20' }, { name: 'PAN.pdf', type: 'PAN', uploadedAt: '2024-01-20' }],
     walletBalance: 25000, spendingLimit: 50000, salaryBand: '₹8L-12L',
-    status: 'active', twoFactorEnabled: true, lastLogin: '2024-04-01 09:30:00', createdAt: '2024-01-20',
+    status: 'active', kycVerified: true, twoFactorEnabled: true, lastLogin: '2024-04-01 09:30:00', createdAt: '2024-01-20',
   },
   {
     id: 'eemp-002', employeeId: 'ACM-002', firstName: 'Sneha', lastName: 'Gupta',
@@ -103,7 +104,7 @@ export const enterpriseEmployees: EnterpriseEmployee[] = [
     govIdType: 'PAN', govIdNumber: 'ABCDE1234F',
     documents: [{ name: 'PAN.pdf', type: 'PAN', uploadedAt: '2024-01-22' }],
     walletBalance: 35000, spendingLimit: 75000, salaryBand: '₹12L-18L',
-    status: 'active', twoFactorEnabled: false, lastLogin: '2024-04-01 10:15:00', createdAt: '2024-01-22',
+    status: 'active', kycVerified: true, twoFactorEnabled: false, lastLogin: '2024-04-01 10:15:00', createdAt: '2024-01-22',
   },
   {
     id: 'eemp-003', employeeId: 'ACM-003', firstName: 'Anita', lastName: 'Krishnan',
@@ -113,7 +114,7 @@ export const enterpriseEmployees: EnterpriseEmployee[] = [
     govIdType: 'Aadhaar', govIdNumber: '9876 5432 1098',
     documents: [{ name: 'Aadhaar.pdf', type: 'Aadhaar', uploadedAt: '2024-01-25' }],
     walletBalance: 0, spendingLimit: 100000,
-    status: 'suspended', twoFactorEnabled: true, lastLogin: '2024-03-15 14:00:00', createdAt: '2024-01-25',
+    status: 'suspended', kycVerified: true, twoFactorEnabled: true, lastLogin: '2024-03-15 14:00:00', createdAt: '2024-01-25',
   },
   {
     id: 'eemp-004', employeeId: 'ACM-004', firstName: 'Vikram', lastName: 'Patel',
@@ -123,7 +124,7 @@ export const enterpriseEmployees: EnterpriseEmployee[] = [
     govIdType: 'PAN', govIdNumber: 'FGHIJ5678K',
     documents: [{ name: 'PAN.pdf', type: 'PAN', uploadedAt: '2024-02-15' }, { name: 'Address Proof.pdf', type: 'Address', uploadedAt: '2024-02-15' }],
     walletBalance: 18000, spendingLimit: 30000, salaryBand: '₹4L-6L',
-    status: 'active', twoFactorEnabled: false, lastLogin: '2024-04-01 08:45:00', createdAt: '2024-02-15',
+    status: 'active', kycVerified: false, twoFactorEnabled: false, lastLogin: '2024-04-01 08:45:00', createdAt: '2024-02-15',
   },
   {
     id: 'eemp-005', employeeId: 'ACM-005', firstName: 'Priya', lastName: 'Sharma',
@@ -133,7 +134,7 @@ export const enterpriseEmployees: EnterpriseEmployee[] = [
     govIdType: 'Passport', govIdNumber: 'J1234567',
     documents: [{ name: 'Passport.pdf', type: 'Passport', uploadedAt: '2024-03-01' }],
     walletBalance: 42000, spendingLimit: 60000, salaryBand: '₹6L-10L',
-    status: 'active', twoFactorEnabled: true, lastLogin: '2024-04-01 11:00:00', createdAt: '2024-03-01',
+    status: 'active', kycVerified: true, twoFactorEnabled: true, lastLogin: '2024-04-01 11:00:00', createdAt: '2024-03-01',
   },
   {
     id: 'eemp-006', employeeId: 'ACM-006', firstName: 'Deepak', lastName: 'Nair',
@@ -143,7 +144,7 @@ export const enterpriseEmployees: EnterpriseEmployee[] = [
     govIdType: 'Aadhaar', govIdNumber: '5678 1234 9012',
     documents: [],
     walletBalance: 15000, spendingLimit: 40000,
-    status: 'active', twoFactorEnabled: false, lastLogin: '2024-03-30 16:30:00', createdAt: '2024-01-30',
+    status: 'active', kycVerified: false, twoFactorEnabled: false, lastLogin: '2024-03-30 16:30:00', createdAt: '2024-01-30',
   },
   {
     id: 'eemp-007', employeeId: 'ACM-007', firstName: 'Meera', lastName: 'Joshi',
@@ -153,7 +154,7 @@ export const enterpriseEmployees: EnterpriseEmployee[] = [
     govIdType: 'Aadhaar', govIdNumber: '3456 7890 1234',
     documents: [{ name: 'Aadhaar.pdf', type: 'Aadhaar', uploadedAt: '2024-03-15' }],
     walletBalance: 5000, spendingLimit: 10000,
-    status: 'active', twoFactorEnabled: false, lastLogin: '2024-04-01 09:00:00', createdAt: '2024-03-15',
+    status: 'active', kycVerified: false, twoFactorEnabled: false, lastLogin: '2024-04-01 09:00:00', createdAt: '2024-03-15',
   },
 ];
 

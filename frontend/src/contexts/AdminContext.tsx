@@ -1,16 +1,85 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import {
-    mockEnterprises,
-    mockEmployees,
-    mockIndividuals,
-    mockTransactions,
-    mockAuditLogs,
-    Enterprise,
-    Employee,
-    Individual,
-    Transaction,
-    AuditLog,
-} from '@/data/adminMockData';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+
+// Interfaces matching the API response shapes
+export interface Enterprise {
+    id: string;
+    name: string;
+    email: string;
+    status: 'active' | 'suspended' | 'pending';
+    walletBalance: number;
+    createdAt: string;
+    industry: string;
+    companyType: string;
+    employeeCount: number;
+    companyCode: string;
+    // Keep these for backward compat with profile pages
+    address: string;
+    country: string;
+    documents: { name: string; type: string; uploadedAt: string }[];
+    poc: {
+        name: string;
+        email: string;
+        phone: string;
+        designation: string;
+        status: 'verified' | 'pending';
+    };
+}
+
+export interface Employee {
+    id: string;
+    enterpriseId: string;
+    enterpriseName: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    department: string;
+    status: 'active' | 'inactive' | 'suspended';
+    walletBalance: number;
+    createdAt: string;
+    joinedVia: string;
+    documents: { name: string; type: string; uploadedAt: string }[];
+}
+
+export interface Individual {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    status: 'active' | 'suspended' | 'pending';
+    walletBalance: number;
+    walletId: string;
+    kycStatus: string;
+    employerName: string;
+    createdAt: string;
+    documents: { name: string; type: string; uploadedAt: string }[];
+}
+
+export interface Transaction {
+    id: string;
+    senderId: string;
+    senderName: string;
+    senderType: 'enterprise' | 'employee' | 'individual';
+    receiverId: string;
+    receiverName: string;
+    receiverType: 'enterprise' | 'employee' | 'individual';
+    amount: number;
+    type: 'credit' | 'debit' | 'transfer';
+    status: 'completed' | 'pending' | 'failed';
+    timestamp: string;
+    description: string;
+}
+
+export interface AuditLog {
+    id: string;
+    adminId: string;
+    adminEmail: string;
+    action: string;
+    targetType: 'enterprise' | 'employee' | 'individual' | 'wallet' | 'system';
+    targetId: string;
+    details: string;
+    timestamp: string;
+}
 
 interface AdminContextType {
     // Data
@@ -19,6 +88,10 @@ interface AdminContextType {
     individuals: Individual[];
     transactions: Transaction[];
     auditLogs: AuditLog[];
+    loading: boolean;
+
+    // Refresh
+    refreshAll: () => Promise<void>;
 
     // Enterprise operations
     updateEnterprise: (id: string, data: Partial<Enterprise>) => void;
@@ -54,12 +127,86 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
+const API_BASE = "http://localhost:8000/api/admin";
+
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [enterprises, setEnterprises] = useState<Enterprise[]>(mockEnterprises);
-    const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
-    const [individuals, setIndividuals] = useState<Individual[]>(mockIndividuals);
-    const [transactions] = useState<Transaction[]>(mockTransactions);
-    const [auditLogs, setAuditLogs] = useState<AuditLog[]>(mockAuditLogs);
+    const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [individuals, setIndividuals] = useState<Individual[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch all data from API
+    const refreshAll = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [entRes, indRes, empRes, txnRes] = await Promise.all([
+                fetch(`${API_BASE}/enterprises`),
+                fetch(`${API_BASE}/individuals`),
+                fetch(`${API_BASE}/employees`),
+                fetch(`${API_BASE}/transactions/recent?limit=50`),
+            ]);
+
+            if (entRes.ok) {
+                const data = await entRes.json();
+                if (data.success) {
+                    setEnterprises(data.enterprises.map((e: any) => ({
+                        ...e,
+                        address: '',
+                        country: 'India',
+                        documents: [],
+                        poc: { name: '', email: '', phone: '', designation: '', status: 'pending' },
+                    })));
+                }
+            }
+
+            if (indRes.ok) {
+                const data = await indRes.json();
+                if (data.success) {
+                    setIndividuals(data.individuals.map((i: any) => ({
+                        ...i,
+                        email: '',
+                        documents: [],
+                    })));
+                }
+            }
+
+            if (empRes.ok) {
+                const data = await empRes.json();
+                if (data.success) {
+                    setEmployees(data.employees.map((e: any) => ({
+                        ...e,
+                        enterpriseId: e.companyId || '',
+                        department: '',
+                        walletBalance: 0,
+                        documents: [],
+                    })));
+                }
+            }
+
+            if (txnRes.ok) {
+                const data = await txnRes.json();
+                if (data.success) {
+                    setTransactions(data.transactions.map((t: any) => ({
+                        ...t,
+                        senderId: '',
+                        receiverId: '',
+                        receiverType: t.senderType === 'enterprise' ? 'individual' : 'enterprise',
+                        timestamp: t.timestamp,
+                    })));
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch admin data:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshAll();
+    }, [refreshAll]);
 
     const addAuditLog = useCallback((action: string, targetType: AuditLog['targetType'], targetId: string, details: string) => {
         const newLog: AuditLog = {
@@ -75,10 +222,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setAuditLogs(prev => [newLog, ...prev]);
     }, []);
 
-    // Enterprise operations
+    // Enterprise operations (client-side for now, can be wired to API later)
     const updateEnterprise = useCallback((id: string, data: Partial<Enterprise>) => {
         setEnterprises(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
-        addAuditLog('ENTERPRISE_UPDATED', 'enterprise', id, `Updated enterprise details`);
+        addAuditLog('ENTERPRISE_UPDATED', 'enterprise', id, 'Updated enterprise details');
     }, [addAuditLog]);
 
     const deleteEnterprise = useCallback((id: string) => {
@@ -93,8 +240,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 const newStatus = e.status === 'active' ? 'suspended' : 'active';
                 addAuditLog(
                     newStatus === 'active' ? 'ENTERPRISE_ACTIVATED' : 'ENTERPRISE_SUSPENDED',
-                    'enterprise',
-                    id,
+                    'enterprise', id,
                     `${newStatus === 'active' ? 'Activated' : 'Suspended'} enterprise "${e.name}"`
                 );
                 return { ...e, status: newStatus };
@@ -106,7 +252,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Employee operations
     const updateEmployee = useCallback((id: string, data: Partial<Employee>) => {
         setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
-        addAuditLog('EMPLOYEE_UPDATED', 'employee', id, `Updated employee details`);
+        addAuditLog('EMPLOYEE_UPDATED', 'employee', id, 'Updated employee details');
     }, [addAuditLog]);
 
     const deleteEmployee = useCallback((id: string) => {
@@ -121,8 +267,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 const newStatus = e.status === 'active' ? 'inactive' : 'active';
                 addAuditLog(
                     newStatus === 'active' ? 'EMPLOYEE_ACTIVATED' : 'EMPLOYEE_DEACTIVATED',
-                    'employee',
-                    id,
+                    'employee', id,
                     `${newStatus === 'active' ? 'Activated' : 'Deactivated'} employee "${e.name}"`
                 );
                 return { ...e, status: newStatus };
@@ -134,7 +279,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Individual operations
     const updateIndividual = useCallback((id: string, data: Partial<Individual>) => {
         setIndividuals(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
-        addAuditLog('INDIVIDUAL_UPDATED', 'individual', id, `Updated individual details`);
+        addAuditLog('INDIVIDUAL_UPDATED', 'individual', id, 'Updated individual details');
     }, [addAuditLog]);
 
     const deleteIndividual = useCallback((id: string) => {
@@ -149,8 +294,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 const newStatus = i.status === 'active' ? 'suspended' : 'active';
                 addAuditLog(
                     newStatus === 'active' ? 'INDIVIDUAL_ACTIVATED' : 'INDIVIDUAL_SUSPENDED',
-                    'individual',
-                    id,
+                    'individual', id,
                     `${newStatus === 'active' ? 'Activated' : 'Suspended'} individual "${i.name}"`
                 );
                 return { ...i, status: newStatus };
@@ -219,7 +363,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             ),
             individuals: individuals.filter(i =>
                 i.name.toLowerCase().includes(lowerQuery) ||
-                i.email.toLowerCase().includes(lowerQuery)
+                i.phone.toLowerCase().includes(lowerQuery)
             ),
         };
     }, [enterprises, employees, individuals]);
@@ -231,6 +375,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             individuals,
             transactions,
             auditLogs,
+            loading,
+            refreshAll,
             updateEnterprise,
             deleteEnterprise,
             toggleEnterpriseStatus,

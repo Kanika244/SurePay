@@ -45,17 +45,17 @@ const PWAProfile = () => {
         {
             title: "Account",
             items: [
-                { icon: User, label: "Personal Information", sub: `${user.firstName} ${user.lastName}`, to: "#" },
-                { icon: FileText, label: "KYC Documents", sub: kycConfig.label, to: "#", badge: kycConfig },
-                { icon: Key, label: "SurePay ID", sub: user.surePayId, to: "#" },
+                { icon: User, label: "Personal Information", sub: `${user.firstName} ${user.lastName}`, to: "/app/profile/personal-info" },
+                { icon: FileText, label: "KYC Documents", sub: kycConfig.label, to: "/app/profile/kyc-status", badge: kycConfig },
+                { icon: Key, label: "SurePay ID", sub: user.surePayId, to: "/app/profile/surepay-id" },
             ],
         },
         {
             title: "Security",
             items: [
-                { icon: Lock, label: "Change Password", sub: "Last changed 30 days ago", to: "#" },
-                { icon: Shield, label: "Two-Factor Auth", sub: "Enabled", to: "#" },
-                { icon: Smartphone, label: "Transaction PIN", sub: "Set up", to: "#" },
+                { icon: Lock, label: "Change Password", sub: "Update your password", to: "/app/profile/change-password" },
+                { icon: Shield, label: "Two-Factor Auth", sub: "Email OTP verification", to: "/app/profile/2fa" },
+                { icon: Smartphone, label: "Transaction PIN", sub: "Secure your transactions", to: "/app/profile/pin" },
             ],
         },
     ];
@@ -71,11 +71,11 @@ const PWAProfile = () => {
                 {/* User card */}
                 <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xl">
-                        {user.firstName[0]}{user.lastName[0]}
+                        {user.firstName?.[0]}{user.lastName?.[0]}
                     </div>
                     <div className="flex-1">
                         <p className="font-semibold text-foreground">{user.firstName} {user.lastName}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <p className="text-sm text-muted-foreground">{user.email || user.phone}</p>
                         <p className="text-xs text-muted-foreground">{user.phone}</p>
                     </div>
                     <div className={`px-2 py-1 rounded-full ${kycConfig.bg}`}>
@@ -106,13 +106,9 @@ const PWAProfile = () => {
                                 <p className="text-sm font-medium text-foreground">Pending Sync</p>
                                 <p className="text-xs text-muted-foreground">{layoutCtx.pendingSyncCount} transaction(s) waiting</p>
                             </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1.5"
+                            <Button variant="outline" size="sm" className="gap-1.5"
                                 onClick={layoutCtx.handleSync}
-                                disabled={!layoutCtx.isOnline || layoutCtx.isSyncing}
-                            >
+                                disabled={!layoutCtx.isOnline || layoutCtx.isSyncing}>
                                 <RefreshCw size={14} className={layoutCtx.isSyncing ? "animate-spin" : ""} />
                                 {layoutCtx.isSyncing ? "Syncing..." : "Sync Now"}
                             </Button>
@@ -145,8 +141,10 @@ const PWAProfile = () => {
                 ))}
 
                 {/* Logout */}
-                <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 gap-2" onClick={handleLogout}>
-                    <LogOut size={16} /> Sign Out
+                <Button variant="outline"
+                    className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 gap-2"
+                    onClick={handleLogout}>
+                    <LogOut size={16} />Sign Out
                 </Button>
             </motion.div>
         </div>

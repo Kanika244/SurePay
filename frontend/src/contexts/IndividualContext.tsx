@@ -11,6 +11,8 @@ import {
     cacheTransactions,
 } from "@/lib/offlineSyncManager";
 
+const API_BASE = "http://localhost:8000";
+
 export interface IndividualUser {
     id: string;
     firstName: string;
@@ -74,55 +76,24 @@ interface IndividualContextType {
     setSelectedWallet: (id: string) => void;
     sendMoney: (to: string, amount: number, walletId: string, note: string) => { success: boolean; offline?: boolean; reason?: string };
     addMoney: (amount: number, method: string) => void;
+    updateEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
     markNotificationRead: (id: string) => void;
     markAllRead: () => void;
     pendingOfflineTx: OfflineTransaction[];
     refreshOfflineTx: () => Promise<void>;
+    refreshWallet: () => Promise<void>;
+    refreshTransactions: () => Promise<void>;
     retryOfflineTx: (txId: string) => Promise<void>;
+    login: (userId: string, phone: string) => void;
     logout: () => Promise<void>;
+    loading: boolean;
 }
 
-const mockUser: IndividualUser = {
-    id: "IND-001",
-    firstName: "Arjun",
-    lastName: "Mehta",
-    email: "arjun.mehta@gmail.com",
-    phone: "+91 98765 43210",
-    dob: "1995-06-15",
-    gender: "Male",
-    surePayId: "arjun.mehta@surepay",
-    kycStatus: "verified",
-    isEmployee: true,
-    employer: {
-        name: "ACME Technologies",
-        logo: "A",
-        employeeId: "EMP-2045",
-        department: "Engineering",
-    },
+const emptyUser: IndividualUser = {
+    id: "", firstName: "", lastName: "", email: "",
+    phone: "", dob: "", gender: "", surePayId: "",
+    kycStatus: "pending", isEmployee: false,
 };
-
-const mockWallets: WalletData[] = [
-    { id: "W-P-001", type: "personal", balance: 24580, currency: "INR", frozen: false },
-    { id: "W-E-001", type: "employer", balance: 8500, currency: "INR", monthlyLimit: 15000, spentThisMonth: 6500, maxPerTransaction: 5000, frozen: false, employerName: "ACME Technologies" },
-];
-
-const mockTransactions: Transaction[] = [
-    { id: "TXN-001", type: "received", amount: 5000, counterparty: "Rahul Sharma", counterpartyId: "rahul@surepay", walletUsed: "personal", status: "completed", note: "Dinner split", timestamp: "2026-02-18T14:30:00Z" },
-    { id: "TXN-002", type: "sent", amount: 1299, counterparty: "Amazon Pay", counterpartyId: "amazon@surepay", walletUsed: "personal", status: "completed", note: "Order #8823", timestamp: "2026-02-18T11:00:00Z" },
-    { id: "TXN-003", type: "sent", amount: 649, counterparty: "Netflix", counterpartyId: "netflix@surepay", walletUsed: "personal", status: "completed", note: "Subscription", timestamp: "2026-02-17T18:00:00Z" },
-    { id: "TXN-004", type: "received", amount: 85000, counterparty: "ACME Technologies", counterpartyId: "acme@surepay", walletUsed: "employer", status: "completed", note: "Salary Feb 2026", timestamp: "2026-02-01T09:00:00Z" },
-    { id: "TXN-005", type: "sent", amount: 350, counterparty: "Starbucks", counterpartyId: "starbucks@surepay", walletUsed: "employer", status: "completed", note: "Coffee meeting", timestamp: "2026-02-16T10:15:00Z", category: "food" },
-    { id: "TXN-006", type: "sent", amount: 2000, counterparty: "Priya Verma", counterpartyId: "priya@surepay", walletUsed: "personal", status: "completed", note: "Gift", timestamp: "2026-02-15T16:00:00Z" },
-    { id: "TXN-007", type: "received", amount: 1500, counterparty: "Vikram Joshi", counterpartyId: "vikram@surepay", walletUsed: "personal", status: "pending", note: "Loan repayment", timestamp: "2026-02-14T12:00:00Z" },
-    { id: "TXN-008", type: "sent", amount: 4500, counterparty: "Uber", counterpartyId: "uber@surepay", walletUsed: "employer", status: "completed", note: "Business travel", timestamp: "2026-02-13T08:00:00Z", category: "transport" },
-];
-
-const mockNotifications: Notification[] = [
-    { id: "N-001", type: "transaction", title: "Money Received", message: "₹5,000 received from Rahul Sharma", timestamp: "2026-02-18T14:30:00Z", read: false },
-    { id: "N-002", type: "employer", title: "Employer Credit", message: "₹8,500 credited to your employer wallet by ACME Technologies", timestamp: "2026-02-01T09:00:00Z", read: false },
-    { id: "N-003", type: "kyc", title: "KYC Verified", message: "Your KYC has been successfully verified", timestamp: "2026-01-28T10:00:00Z", read: true },
-    { id: "N-004", type: "system", title: "Security Alert", message: "New login detected from Chrome on Windows", timestamp: "2026-02-17T22:00:00Z", read: true },
-];
 
 const IndividualContext = createContext<IndividualContextType | null>(null);
 
@@ -133,24 +104,177 @@ export const useIndividual = () => {
 };
 
 export const IndividualProvider = ({ children }: { children: ReactNode }) => {
-    const [user] = useState(mockUser);
-    const [wallets, setWallets] = useState(mockWallets);
-    const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-    const [notifications, setNotifications] = useState(mockNotifications);
-    const [selectedWallet, setSelectedWallet] = useState(mockWallets[0].id);
+    const [user, setUser] = useState<IndividualUser>(emptyUser);
+    const [wallets, setWallets] = useState<WalletData[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [selectedWallet, setSelectedWallet] = useState("");
     const [pendingOfflineTx, setPendingOfflineTx] = useState<OfflineTransaction[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Cache wallet state whenever it changes
+    // ── FIXED: reactive state instead of plain constants ──
+    const [userId, setUserId] = useState(() => localStorage.getItem("individual_user_id") || "");
+    const [userPhone, setUserPhone] = useState(() => localStorage.getItem("individual_phone") || "");
+
+    const fetchUserProfile = useCallback(async () => {
+        if (!userId && !userPhone) return;
+        try {
+            if (userId) {
+                const res = await fetch(`${API_BASE}/api/kyc/details-by-id/${userId}`);
+                if (res.ok) {
+                    const d = await res.json();
+                    setUser({
+                        id: userId,
+                        firstName: d.full_name?.split(" ")[0] || "User",
+                        lastName: d.full_name?.split(" ").slice(1).join(" ") || "",
+                        email: d.email || "",
+                        phone: d.phone || userPhone,
+                        dob: d.dob || "",
+                        gender: d.gender || "",
+                        surePayId: `${(d.full_name || "user").replace(/\s+/g, ".").toLowerCase()}@surepay`,
+                        kycStatus: d.kyc_status === "SUBMITTED" ? "verified" :
+                            d.kyc_status === "REJECTED" ? "rejected" : "pending",
+                        isEmployee: false,
+                    });
+                    return;
+                }
+            }
+            if (userPhone) {
+                const res = await fetch(`${API_BASE}/api/kyc/personal-details/${encodeURIComponent(userPhone)}`);
+                if (res.ok) {
+                    const d = await res.json();
+                    // Also fetch email from user record
+                    let email = "";
+                    try {
+                        const uRes = await fetch(`${API_BASE}/api/kyc/user/${encodeURIComponent(userPhone)}`);
+                        if (uRes.ok) { const uData = await uRes.json(); email = uData.user?.email || ""; }
+                    } catch { /* non-fatal */ }
+                    setUser({
+                        id: d.user_id || userId,
+                        firstName: d.full_name?.split(" ")[0] || "User",
+                        lastName: d.full_name?.split(" ").slice(1).join(" ") || "",
+                        email,
+                        phone: userPhone,
+                        dob: d.dob || "",
+                        gender: d.gender || "",
+                        surePayId: `${(d.full_name || "user").replace(/\s+/g, ".").toLowerCase()}@surepay`,
+                        kycStatus: d.kyc_status === "SUBMITTED" ? "verified" :
+                            d.kyc_status === "REJECTED" ? "rejected" : "pending",
+                        isEmployee: false,
+                    });
+                    if (d.user_id) {
+                        localStorage.setItem("individual_user_id", d.user_id);
+                        setUserId(d.user_id);
+                    }
+                    return;
+                }
+            }
+            setUser({ ...emptyUser, id: userId, phone: userPhone, firstName: "User" });
+        } catch (err) {
+            console.error("Failed to fetch user profile:", err);
+            setUser({ ...emptyUser, id: userId, phone: userPhone, firstName: "User" });
+        }
+    }, [userId, userPhone]);
+
+    const fetchWallet = useCallback(async () => {
+        if (!userId) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/v1/wallet/individual/${userId}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === "success" && data.wallet) {
+                    const w = data.wallet;
+                    setWallets([{
+                        id: w.wallet_id,
+                        type: "personal",
+                        balance: w.balance || 0,
+                        currency: w.currency || "INR",
+                        frozen: w.status !== "active",
+                    }]);
+                    setSelectedWallet(w.wallet_id);
+                    return;
+                }
+            }
+
+            // No wallet found — auto-activate one for this user
+            const activateRes = await fetch(`${API_BASE}/api/v1/wallet/individual/activate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: userId }),
+            });
+            if (activateRes.ok) {
+                const activateData = await activateRes.json();
+                if (activateData.status === "success" && activateData.wallet) {
+                    const w = activateData.wallet;
+                    setWallets([{
+                        id: w.wallet_id,
+                        type: "personal",
+                        balance: w.balance || 0,
+                        currency: w.currency || "INR",
+                        frozen: w.status !== "active",
+                    }]);
+                    setSelectedWallet(w.wallet_id);
+                    return;
+                }
+            }
+
+            setWallets([{ id: "no-wallet", type: "personal", balance: 0, currency: "INR", frozen: false }]);
+            setSelectedWallet("no-wallet");
+        } catch (err) {
+            console.error("Failed to fetch wallet:", err);
+        }
+    }, [userId]);
+
+    const fetchTransactions = useCallback(async () => {
+        if (!userId) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/v1/wallet/individual/${userId}/transactions`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === "success" && data.transactions) {
+                    const mapped: Transaction[] = data.transactions.map((tx: any) => ({
+                        id: tx.id,
+                        type: tx.type === "credit" ? "received" : "sent",
+                        amount: tx.amount,
+                        counterparty: tx.sender_name || tx.description || "Unknown",
+                        counterpartyId: tx.sender_wallet_id || "",
+                        walletUsed: "personal" as const,
+                        status: (tx.status || "completed") as "completed" | "pending" | "failed",
+                        note: tx.description || "",
+                        timestamp: tx.created_at || new Date().toISOString(),
+                    }));
+                    setTransactions(mapped);
+                    return;
+                }
+            }
+            setTransactions([]);
+        } catch (err) {
+            console.error("Failed to fetch transactions:", err);
+        }
+    }, [userId]);
+
+    // ── Re-fetch whenever userId changes (login/logout) ──
     useEffect(() => {
-        cacheWalletState(wallets, user.id).catch(console.error);
+        const loadData = async () => {
+            setLoading(true);
+            await Promise.all([fetchUserProfile(), fetchWallet(), fetchTransactions()]);
+            setLoading(false);
+        };
+        loadData();
+    }, [fetchUserProfile, fetchWallet, fetchTransactions]);
+
+    useEffect(() => {
+        if (user.id && wallets.length > 0) {
+            cacheWalletState(wallets, user.id).catch(console.error);
+        }
     }, [wallets, user.id]);
 
-    // Cache transactions whenever they change
     useEffect(() => {
-        cacheTransactions(transactions).catch(console.error);
+        if (transactions.length > 0) {
+            cacheTransactions(transactions).catch(console.error);
+        }
     }, [transactions]);
 
-    // Load pending offline transactions on mount
     const refreshOfflineTx = useCallback(async () => {
         try {
             const all = await offlineTransactions.getAll();
@@ -160,9 +284,28 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-    useEffect(() => {
-        refreshOfflineTx();
-    }, [refreshOfflineTx]);
+    useEffect(() => { refreshOfflineTx(); }, [refreshOfflineTx]);
+
+    // ── NEW: call this from SignIn instead of writing localStorage directly ──
+    const login = useCallback((newUserId: string, newPhone: string) => {
+        localStorage.setItem("individual_user_id", newUserId);
+        localStorage.setItem("individual_phone", newPhone);
+        setUserId(newUserId);
+        setUserPhone(newPhone);
+    }, []);
+
+    const logout = async () => {
+        await clearAllCaches();
+        localStorage.removeItem("individual_user_id");
+        localStorage.removeItem("individual_phone");
+        setPendingOfflineTx([]);
+        setUser(emptyUser);
+        setWallets([]);
+        setTransactions([]);
+        setNotifications([]);
+        setUserId("");       // ← clears reactive state
+        setUserPhone("");    // ← clears reactive state
+    };
 
     const sendMoney = (to: string, amount: number, walletId: string, note: string): { success: boolean; offline?: boolean; reason?: string } => {
         const wallet = wallets.find(w => w.id === walletId);
@@ -173,7 +316,6 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
 
         const isOnline = navigator.onLine;
 
-        // Optimistically deduct from wallet
         setWallets(prev => prev.map(w =>
             w.id === walletId
                 ? { ...w, balance: w.balance - amount, spentThisMonth: (w.spentThisMonth || 0) + amount }
@@ -182,32 +324,21 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
 
         const txId = isOnline ? `TXN-${Date.now()}` : generateOfflineTxId();
         const newTx: Transaction = {
-            id: txId,
-            type: "sent",
-            amount,
-            counterparty: to,
-            counterpartyId: to,
+            id: txId, type: "sent", amount,
+            counterparty: to, counterpartyId: to,
             walletUsed: wallet.type,
             status: isOnline ? "completed" : "pending",
-            note,
-            timestamp: new Date().toISOString(),
+            note, timestamp: new Date().toISOString(),
             offlineStatus: isOnline ? undefined : "pending",
         };
         setTransactions(prev => [newTx, ...prev]);
 
         if (!isOnline) {
-            // Queue in IndexedDB
             const offlineTx: OfflineTransaction = {
-                id: txId,
-                sender_id: user.id,
-                receiver_id: to,
-                amount,
-                wallet_type: wallet.type,
-                wallet_id: walletId,
-                note,
-                created_at: new Date().toISOString(),
-                status: "pending",
-                retry_count: 0,
+                id: txId, sender_id: user.id, receiver_id: to,
+                amount, wallet_type: wallet.type, wallet_id: walletId,
+                note, created_at: new Date().toISOString(),
+                status: "pending", retry_count: 0,
             };
             offlineTransactions.add(offlineTx).then(() => refreshOfflineTx()).catch(console.error);
         }
@@ -236,40 +367,49 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
     const addMoney = (amount: number, _method: string) => {
         setWallets(prev => prev.map(w => w.type === "personal" ? { ...w, balance: w.balance + amount } : w));
         const newTx: Transaction = {
-            id: `TXN-${Date.now()}`,
-            type: "received",
-            amount,
-            counterparty: "Bank Transfer",
-            counterpartyId: "bank",
-            walletUsed: "personal",
-            status: "completed",
-            note: "Added via bank",
-            timestamp: new Date().toISOString(),
+            id: `TXN-${Date.now()}`, type: "received", amount,
+            counterparty: "Bank Transfer", counterpartyId: "bank",
+            walletUsed: "personal", status: "completed",
+            note: "Added via bank", timestamp: new Date().toISOString(),
         };
         setTransactions(prev => [newTx, ...prev]);
     };
 
-    const markNotificationRead = (id: string) => {
+    const updateEmail = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
+        if (!userPhone) return { success: false, error: "Not logged in." };
+        try {
+            const fd = new FormData();
+            fd.append("phone", userPhone);
+            fd.append("email", email);
+            const res = await fetch(`${API_BASE}/api/kyc/update-email`, { method: "PATCH", body: fd });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setUser(prev => ({ ...prev, email: data.email }));
+                return { success: true };
+            }
+            return { success: false, error: data.detail || "Failed to update email." };
+        } catch {
+            return { success: false, error: "Network error." };
+        }
+    }, [userPhone]);
+
+    const markNotificationRead = (id: string) =>
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    };
 
-    const markAllRead = () => {
+    const markAllRead = () =>
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
-
-    const logout = async () => {
-        await clearAllCaches();
-        setPendingOfflineTx([]);
-    };
 
     return (
         <IndividualContext.Provider value={{
             user, wallets, transactions, notifications,
             selectedWallet, setSelectedWallet,
-            sendMoney, addMoney,
+            sendMoney, addMoney, updateEmail,
             markNotificationRead, markAllRead,
-            pendingOfflineTx, refreshOfflineTx, retryOfflineTx,
-            logout,
+            pendingOfflineTx, refreshOfflineTx,
+            refreshWallet: fetchWallet,
+            refreshTransactions: fetchTransactions,
+            retryOfflineTx,
+            login, logout, loading,
         }}>
             {children}
         </IndividualContext.Provider>

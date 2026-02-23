@@ -8,6 +8,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useIndividual } from "@/contexts/IndividualContext";
 import { useToast } from "@/hooks/use-toast";
 
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const methods = [
     { key: "bank", icon: Landmark, label: "Bank Transfer" },
     { key: "upi", icon: Smartphone, label: "UPI" },
@@ -17,7 +19,7 @@ const methods = [
 type Method = typeof methods[number]["key"];
 
 const PWAAddMoney = () => {
-    const { addMoney } = useIndividual();
+    const { user, refreshWallet, refreshTransactions } = useIndividual();
     const [method, setMethod] = useState<Method>("upi");
     const [amount, setAmount] = useState("");
     const [processing, setProcessing] = useState(false);
@@ -27,16 +29,36 @@ const PWAAddMoney = () => {
 
     const quickAmounts = [500, 1000, 2000, 5000];
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         if (!amount || Number(amount) <= 0) return;
         setProcessing(true);
-        setTimeout(() => {
-            addMoney(Number(amount), method);
+        try {
+            const res = await fetch(`${BASE_URL}/api/v1/wallet/individual/top-up`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    amount: Number(amount),
+                    method,
+                    description: `Top-up via ${method}`,
+                }),
+            });
+            const data = await res.json();
+            if (res.ok && data.status === "success") {
+                // Refresh wallet + transactions from server so the new balance is live
+                await refreshWallet();
+                await refreshTransactions();
+                setDone(true);
+                toast({ title: "Money Added!", description: `₹${Number(amount).toLocaleString()} added to your wallet` });
+                setTimeout(() => navigate("/app"), 1500);
+            } else {
+                toast({ title: "Failed", description: data.detail || "Something went wrong.", variant: "destructive" });
+            }
+        } catch {
+            toast({ title: "Network Error", description: "Please check your connection and try again.", variant: "destructive" });
+        } finally {
             setProcessing(false);
-            setDone(true);
-            toast({ title: "Money Added!", description: `₹${Number(amount).toLocaleString()} added to your wallet` });
-            setTimeout(() => navigate("/app"), 1500);
-        }, 2000);
+        }
     };
 
     if (done) {

@@ -13,117 +13,170 @@ import KYCReviewConsent from "@/components/kyc/KYCReviewConsent";
 import KYCStatus from "@/components/kyc/KYCStatus";
 import logo from "@/assets/logo.jpg";
 
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 type KYCStep = 'intro' | 'personal' | 'pan' | 'aadhaar' | 'selfie' | 'password' | 'review' | 'status';
 
 interface KYCData {
-  // Personal Details
   fullName: string;
   dob: string;
   gender: string;
   address: string;
   sameAsAadhaar: boolean;
-
-  // PAN
   panImage: File | null;
   panNumber: string;
   panName: string;
-
-  // Aadhaar
-  aadhaar: {
-    frontImage: File | null;
-    backImage: File | null;
-  };
+  aadhaar: { frontImage: File | null; backImage: File | null };
   aadhaarNumber: string;
   aadhaarName: string;
-
-  // Selfie
-  selfie: {
-    selfieImage: string | null;
-    livenessCompleted: boolean;
-  };
-
-  // Password
+  selfie: { selfieImage: string | null; livenessCompleted: boolean };
   password: string;
   confirmPassword: string;
 }
 
 const initialData: KYCData = {
-  fullName: '',
-  dob: '',
-  gender: '',
-  address: '',
-  sameAsAadhaar: false,
-  panImage: null,
-  panNumber: '',
-  panName: '',
-  aadhaar: {
-    frontImage: null,
-    backImage: null,
-  },
-  aadhaarNumber: '',
-  aadhaarName: '',
-  selfie: {
-    selfieImage: null,
-    livenessCompleted: false,
-  },
-  password: '',
-  confirmPassword: '',
+  fullName: '', dob: '', gender: '', address: '', sameAsAadhaar: false,
+  panImage: null, panNumber: '', panName: '',
+  aadhaar: { frontImage: null, backImage: null },
+  aadhaarNumber: '', aadhaarName: '',
+  selfie: { selfieImage: null, livenessCompleted: false },
+  password: '', confirmPassword: '',
 };
 
 const STEPS: KYCStep[] = ['intro', 'personal', 'pan', 'aadhaar', 'selfie', 'password', 'review', 'status'];
-const STEP_LABELS = ['Start', 'Details', 'PAN', 'Aadhaar', 'Selfie', 'Password', 'Review', 'Done'];
+const STEP_LABELS: string[] = ['Start', 'Details', 'PAN', 'Aadhaar', 'Selfie', 'Password', 'Review', 'Done'];
 
 const KYCFlow = () => {
   const [currentStep, setCurrentStep] = useState<KYCStep>('intro');
   const [data, setData] = useState<KYCData>(initialData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Phone comes from localStorage — set during OTP verification
+  const phone = localStorage.getItem("individual_phone") || "";
+
   const currentStepIndex = STEPS.indexOf(currentStep);
+  const goToStep = (step: KYCStep) => { setError(""); setCurrentStep(step); };
+  const goNext = () => { setError(""); setCurrentStep(STEPS[currentStepIndex + 1]); };
+  const goBack = () => { setError(""); setCurrentStep(STEPS[currentStepIndex - 1]); };
 
-  const goToStep = (step: KYCStep) => {
-    setCurrentStep(step);
-  };
-
-  const goNext = () => {
-    const nextIndex = currentStepIndex + 1;
-    if (nextIndex < STEPS.length) {
-      setCurrentStep(STEPS[nextIndex]);
+  // ── STEP 1: Save personal details ──
+  const handlePersonalContinue = async () => {
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(`${BASE_URL}/api/kyc/personal-details`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone,
+          full_name: data.fullName,
+          dob: data.dob,
+          gender: data.gender,
+          address: data.address,
+          same_as_aadhaar: data.sameAsAadhaar,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || "Failed to save personal details.");
+      // Save user_id to localStorage if returned
+      if (result.user_id) localStorage.setItem("individual_user_id", result.user_id);
+      goNext();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const goBack = () => {
-    const prevIndex = currentStepIndex - 1;
-    if (prevIndex >= 0) {
-      setCurrentStep(STEPS[prevIndex]);
+  // ── STEP 2: Upload PAN + Aadhaar documents together ──
+  const handleDocumentsContinue = async () => {
+    if (!data.panImage || !data.aadhaar.frontImage || !data.aadhaar.backImage) {
+      setError("Please upload all required documents."); return;
+    }
+    setLoading(true); setError("");
+    try {
+      const formData = new FormData();
+      formData.append("phone", phone);
+      formData.append("pan_image", data.panImage);
+      formData.append("aadhaar_front", data.aadhaar.frontImage);
+      formData.append("aadhaar_back", data.aadhaar.backImage);
+
+      const res = await fetch(`${BASE_URL}/api/kyc/documents`, { method: "POST", body: formData });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || "Failed to upload documents.");
+
+      // Store OCR extracted data
+      setData(prev => ({
+        ...prev,
+        panNumber: result.extracted_data?.pan_number || prev.panNumber,
+        panName: result.extracted_data?.pan_name || prev.panName,
+        aadhaarNumber: result.extracted_data?.aadhaar_number || prev.aadhaarNumber,
+        aadhaarName: result.extracted_data?.aadhaar_name || prev.aadhaarName,
+      }));
+      goNext();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Simulate OCR extraction when moving from aadhaar step
-  const handleAadhaarContinue = () => {
-    // Mock OCR extraction
-    setData(prev => ({
-      ...prev,
-      aadhaarNumber: '123456789012',
-      aadhaarName: prev.fullName || 'JOHN DOE',
-    }));
-    goNext();
+  // ── STEP 3: Upload selfie ──
+  const handleSelfieContinue = async () => {
+    if (!data.selfie.selfieImage) { setError("Please capture a selfie."); return; }
+    setLoading(true); setError("");
+    try {
+      const formData = new FormData();
+      formData.append("phone", phone);
+      formData.append("selfie_data", data.selfie.selfieImage); // base64
+
+      const res = await fetch(`${BASE_URL}/api/kyc/selfie`, { method: "POST", body: formData });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || "Failed to upload selfie.");
+      goNext();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Simulate OCR extraction when moving from pan step
-  const handlePanContinue = () => {
-    // Mock OCR extraction
-    setData(prev => ({
-      ...prev,
-      panNumber: 'ABCDE1234F',
-      panName: prev.fullName || 'JOHN DOE',
-    }));
-    goNext();
+  // ── STEP 4: Set password ──
+  const handlePasswordContinue = async () => {
+    setLoading(true); setError("");
+    try {
+      const formData = new FormData();
+      formData.append("phone", phone);
+      formData.append("password", data.password);
+
+      const res = await fetch(`${BASE_URL}/api/kyc/password`, { method: "POST", body: formData });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || "Failed to set password.");
+      goNext();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
-    // Here you would submit all data to backend
-    console.log('Submitting KYC data:', data);
-    goToStep('status');
+  // ── STEP 5: Final submit ──
+  const handleSubmit = async () => {
+    setLoading(true); setError("");
+    try {
+      const formData = new FormData();
+      formData.append("phone", phone);
+
+      const res = await fetch(`${BASE_URL}/api/kyc/submit`, { method: "POST", body: formData });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || "Failed to submit KYC.");
+      goToStep('status');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const showProgress = currentStep !== 'intro' && currentStep !== 'status';
@@ -136,30 +189,21 @@ const KYCFlow = () => {
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4">
             {showBackToHome && (
-              <Link
-                to="/"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to home
+              <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="w-4 h-4" />Back to home
               </Link>
             )}
             {!showBackToHome && currentStep !== 'status' && (
-              <button
-                onClick={goBack}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <button onClick={goBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="w-5 h-5" />
                 <span className="text-sm font-medium hidden sm:inline">Back</span>
               </button>
             )}
           </div>
-
           <Link to="/" className="flex items-center gap-2">
             <img src={logo} alt="SurePay Logo" className="w-8 h-8 rounded-lg object-cover" />
             <span className="font-semibold text-lg">SurePay</span>
           </Link>
-
           <div className="w-20" />
         </div>
       </header>
@@ -168,11 +212,15 @@ const KYCFlow = () => {
       {showProgress && (
         <div className="border-b bg-background">
           <div className="container max-w-4xl mx-auto">
-            <EnterpriseKYCProgress
-              currentStep={currentStepIndex}
-              steps={STEP_LABELS}
-            />
+            <EnterpriseKYCProgress currentStep={currentStepIndex} steps={STEP_LABELS} />
           </div>
+        </div>
+      )}
+
+      {/* Global error */}
+      {error && (
+        <div className="container max-w-lg mx-auto pt-4">
+          <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm text-center">{error}</div>
         </div>
       )}
 
@@ -188,16 +236,11 @@ const KYCFlow = () => {
           {currentStep === 'personal' && (
             <motion.div key="personal">
               <KYCPersonalDetails
-                data={{
-                  fullName: data.fullName,
-                  dob: data.dob,
-                  gender: data.gender,
-                  address: data.address,
-                  sameAsAadhaar: data.sameAsAadhaar,
-                }}
-                onUpdate={(personalData) => setData({ ...data, ...personalData })}
-                onContinue={goNext}
+                data={{ fullName: data.fullName, dob: data.dob, gender: data.gender, address: data.address, sameAsAadhaar: data.sameAsAadhaar }}
+                onUpdate={(d) => setData({ ...data, ...d })}
+                onContinue={handlePersonalContinue}   // ← real API
                 onBack={() => goToStep('intro')}
+              //loading={loading}
               />
             </motion.div>
           )}
@@ -207,7 +250,7 @@ const KYCFlow = () => {
               <KYCPanVerification
                 panImage={data.panImage}
                 onUpdate={(file) => setData({ ...data, panImage: file })}
-                onContinue={handlePanContinue}
+                onContinue={goNext}   // PAN uploaded together with Aadhaar in next step
                 onBack={goBack}
               />
             </motion.div>
@@ -217,9 +260,10 @@ const KYCFlow = () => {
             <motion.div key="aadhaar">
               <KYCAadhaarVerification
                 data={data.aadhaar}
-                onUpdate={(aadhaarData) => setData({ ...data, aadhaar: aadhaarData })}
-                onContinue={handleAadhaarContinue}
+                onUpdate={(d) => setData({ ...data, aadhaar: d })}
+                onContinue={handleDocumentsContinue}  // ← real API (uploads PAN + Aadhaar)
                 onBack={goBack}
+              //loading={loading}
               />
             </motion.div>
           )}
@@ -228,9 +272,10 @@ const KYCFlow = () => {
             <motion.div key="selfie">
               <KYCSelfieCapture
                 data={data.selfie}
-                onUpdate={(selfieData) => setData({ ...data, selfie: selfieData })}
-                onContinue={goNext}
+                onUpdate={(d) => setData({ ...data, selfie: d })}
+                onContinue={handleSelfieContinue}     // ← real API
                 onBack={goBack}
+              //loading={loading}
               />
             </motion.div>
           )}
@@ -242,8 +287,9 @@ const KYCFlow = () => {
                 confirmPassword={data.confirmPassword}
                 onUpdatePassword={(password) => setData({ ...data, password })}
                 onUpdateConfirmPassword={(confirmPassword) => setData({ ...data, confirmPassword })}
-                onContinue={goNext}
+                onContinue={handlePasswordContinue}   // ← real API
                 onBack={goBack}
+              //loading={loading}
               />
             </motion.div>
           )}
@@ -252,17 +298,15 @@ const KYCFlow = () => {
             <motion.div key="review">
               <KYCReviewConsent
                 data={{
-                  fullName: data.fullName,
-                  dob: data.dob,
+                  fullName: data.fullName, dob: data.dob,
                   address: data.address,
-                  panNumber: data.panNumber,
-                  panName: data.panName,
-                  aadhaarNumber: data.aadhaarNumber,
-                  aadhaarName: data.aadhaarName,
+                  panNumber: data.panNumber, panName: data.panName,
+                  aadhaarNumber: data.aadhaarNumber, aadhaarName: data.aadhaarName,
                   selfieImage: data.selfie.selfieImage,
                 }}
-                onSubmit={handleSubmit}
+                onSubmit={handleSubmit}               // ← real API
                 onBack={goBack}
+              //loading={loading}
               />
             </motion.div>
           )}

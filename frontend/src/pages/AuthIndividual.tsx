@@ -24,28 +24,28 @@ const AuthIndividual = () => {
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    try{
-    const res = await fetch("http://localhost:8000/auth/send_otp", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ phone }),
-    });
+    try {
+      const res = await fetch("http://localhost:8000/auth/send_otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
 
-    const data  = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      console.log("Mock OTP:", data.otp); // For testing purposes
-      setStep("otp");
-    }else{
-      alert(data.detail);
+      if (res.ok) {
+        console.log("Mock OTP:", data.otp); // For testing purposes
+        setStep("otp");
+      } else {
+        alert(data.detail);
+
+      }
+    } catch (err) {
+      console.error("Error sending OTP:", err);
+      alert("Failed to send OTP. Please try again.");
 
     }
-  }catch(err){
-    console.error("Error sending OTP:", err);
-    alert("Failed to send OTP. Please try again.");
-
-  }
-};
+  };
 
 
 
@@ -54,16 +54,22 @@ const AuthIndividual = () => {
 
     const res = await fetch("http://localhost:8000/auth/verify-otp", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, otp }),
     });
     const data = await res.json();
-    if (data.is_new_user) {
-      // Navigate to KYC flow after successful verification
-      navigate("/kyc");
-    }else{
-      navigate("/dashboard");
+    if (res.ok) {
 
+      localStorage.setItem("individual_phone", phone);
+      if (data.user_id) localStorage.setItem("individual_user_id", data.user_id);
+
+      if (data.is_new_user) {
+        navigate("/kyc");
+      } else {
+        navigate("/app");  // ← also fix: was "/dashboard", should be "/app"
+      }
+    } else {
+      alert(data.detail || "OTP verification failed.");
     }
   };
 

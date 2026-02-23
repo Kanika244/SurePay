@@ -151,10 +151,10 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
             </div>
 
             <Button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/app')}
               className="w-full h-12 gradient-primary hover:opacity-90"
             >
-              Go to Dashboard
+              Go to App
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
@@ -214,11 +214,11 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
             </div>
 
             <Button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/app')}
               variant="outline"
               className="w-full h-12"
             >
-              Go to Dashboard
+              Go to App
             </Button>
           </motion.div>
         )}
@@ -264,11 +264,11 @@ const KYCStatus = ({ initialStatus = 'submitted' }: KYCStatusProps) => {
 
             <div className="flex gap-3">
               <Button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/app')}
                 variant="outline"
                 className="flex-1 h-12"
               >
-                Go Back
+                Go to App
               </Button>
               <Button
                 onClick={() => window.location.reload()}

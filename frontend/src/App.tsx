@@ -11,6 +11,7 @@ import Dashboard from "./pages/IndividualDashboard";
 import KYCFlow from "./pages/IndividualOnboarding";
 import EnterpriseOnboarding from "./pages/EnterpriseOnboarding";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 // Admin imports
 import { AdminProvider } from "./contexts/AdminContext";
@@ -51,6 +52,13 @@ import PWAWallet from "./pages/pwa/PWAWallet";
 import PWAAddMoney from "./pages/pwa/PWAAddMoney";
 import PWAProfile from "./pages/pwa/PWAProfile";
 import PWANotifications from "./pages/pwa/PWANotifications";
+import PWAPersonalInfo from "./pages/pwa/PWAPersonalInfo";
+import PWAKYCStatus from "./pages/pwa/PWAKYCStatus";
+import PWASurePayId from "./pages/pwa/PWASurePayId";
+import PWAChangePassword from "./pages/pwa/PWAChangePassword";
+import PWATwoFactorAuth from "./pages/pwa/PWATwoFactorAuth";
+import PWATransactionPIN from "./pages/pwa/PWATransactionPIN";
+
 
 const queryClient = new QueryClient();
 
@@ -71,6 +79,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/kyc" element={<KYCFlow />} />
                 <Route path="/enterprise/onboarding" element={<EnterpriseOnboarding />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
                 {/* Individual PWA Routes */}
                 <Route path="/app" element={<MobileLayout />}>
@@ -83,6 +92,12 @@ const App = () => (
                   <Route path="add-money" element={<PWAAddMoney />} />
                   <Route path="profile" element={<PWAProfile />} />
                   <Route path="notifications" element={<PWANotifications />} />
+                  <Route path="profile/personal-info" element={<PWAPersonalInfo />} />
+                  <Route path="profile/kyc-status" element={<PWAKYCStatus />} />
+                  <Route path="profile/surepay-id" element={<PWASurePayId />} />
+                  <Route path="profile/change-password" element={<PWAChangePassword />} />
+                  <Route path="profile/2fa" element={<PWATwoFactorAuth />} />
+                  <Route path="profile/pin" element={<PWATransactionPIN />} />
                 </Route>
 
                 {/* Enterprise Panel Routes */}

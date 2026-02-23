@@ -38,7 +38,7 @@ const txnVolumeData = [
 const COLORS = ["hsl(234, 89%, 54%)", "hsl(262, 83%, 58%)", "hsl(168, 76%, 42%)", "hsl(217, 91%, 60%)"];
 
 const EnterpriseHomeDashboard = () => {
-    const { employees, transactions, walletBalance } = useEnterprise();
+    const { employees, transactions, walletBalance, profile } = useEnterprise();
 
     const activeEmps = employees.filter(e => e.status === "active").length;
     const suspendedEmps = employees.filter(e => e.status === "suspended").length;
@@ -53,7 +53,7 @@ const EnterpriseHomeDashboard = () => {
     const recentTxns = transactions.slice(0, 5);
 
     return (
-        <EnterpriseLayout title="Dashboard" subtitle="Welcome back, Acme Technologies Pvt Ltd">
+        <EnterpriseLayout title="Dashboard" subtitle={`Welcome back, ${profile.companyName || "your company"}`}>
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
                 <KPICard title="Total Employees" value={employees.length} icon={Users} change={`+${employees.length}`} trend="up" delay={0} />

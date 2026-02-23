@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAdmin } from "@/contexts/AdminContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 
 interface AdminLayoutProps {
@@ -24,6 +24,13 @@ const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [showSearchResults, setShowSearchResults] = useState(false);
     const { globalSearch } = useAdmin();
+    const navigate = useNavigate();
+
+    const handleSignOut = () => {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_email");
+        navigate("/auth/signin");
+    };
 
     const searchResults = searchQuery.length > 2 ? globalSearch(searchQuery) : null;
     const hasResults = searchResults && (
@@ -152,7 +159,7 @@ const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => {
                                 <DropdownMenuItem>Profile</DropdownMenuItem>
                                 <DropdownMenuItem>Settings</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">Sign Out</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={handleSignOut}>Sign Out</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
@@ -37,6 +37,13 @@ const navItems: NavItem[] = [
 const AdminSidebar = () => {
     const [collapsed, setCollapsed] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleSignOut = () => {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_email");
+        navigate("/auth/signin");
+    };
 
     const isActive = (path: string) => {
         if (path === "/admin") {
@@ -112,10 +119,10 @@ const AdminSidebar = () => {
 
             {/* Footer */}
             <div className="p-3 border-t border-border">
-                <Link
-                    to="/auth/signin"
+                <button
+                    onClick={handleSignOut}
                     className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all w-full"
                     )}
                 >
                     <LogOut size={20} className={collapsed ? "mx-auto" : ""} />
@@ -131,7 +138,7 @@ const AdminSidebar = () => {
                             </motion.span>
                         )}
                     </AnimatePresence>
-                </Link>
+                </button>
 
                 <Button
                     variant="ghost"

@@ -1,96 +1,120 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.jpg";
+// ADD this import at the top
+import { Link, useNavigate } from "react-router-dom";
 import {
-    Building2,
-    Wallet,
-    Users,
-    ArrowUpRight,
-    ArrowDownLeft,
-    Plus,
-    Settings,
-    Bell,
-    LogOut,
-    ChevronDown,
-    TrendingUp,
-    CreditCard,
-    FileText,
-    BarChart3,
+    Building2, Wallet, Users, ArrowUpRight, ArrowDownLeft,
+    Plus, Settings, LogOut, ChevronDown,
+    CreditCard, FileText, BarChart3, UserCheck, UserX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import NotificationDropdown from "@/components/enterprise/NotificationDropdown"; // ← imported
+
+// ADD this inside the component (top of EnterpriseDashboard function)
+
+
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 
 const EnterpriseDashboard = () => {
-    const [companyName] = useState("Acme Technologies Pvt Ltd");
+    const [companyName, setCompanyName] = useState("Loading...");
+    const [walletBalance, setWalletBalance] = useState("₹0");
+    const [totalTransactions, setTotalTransactions] = useState("0");
+    const [teamMembers, setTeamMembers] = useState("0");
+    const [kycVerified, setKycVerified] = useState("0");
+    const [kycPending, setKycPending] = useState("0");
+    const [recentTransactions, setRecentTransactions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const navigate = useNavigate();
+    const token = localStorage.getItem("token");
+    const companyId = localStorage.getItem("company_id");
+    const headers = { Authorization: `Bearer ${token}` };
+
+    useEffect(() => {
+        if (!token || !companyId) {
+            setError("Session expired. Please login again.");
+            setLoading(false);
+            return;
+        }
+        fetchAllData();
+    }, []);
+
+    const fetchAllData = async () => {
+        setLoading(true);
+        await Promise.allSettled([
+            fetchProfile(),
+            fetchWallet(),
+            fetchEmployees(),
+            fetchTransactions(),
+        ]);
+        setLoading(false);
+    };
+
+    const fetchProfile = async () => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/enterprise-panel/profile/${companyId}`, { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+            setCompanyName(data.profile?.companyName || "Your Company");
+        } catch (e) { console.error("Profile error:", e); }
+    };
+
+    const fetchWallet = async () => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/enterprise-panel/wallet/${companyId}`, { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+            setWalletBalance(`₹${Number(data.balance ?? 0).toLocaleString("en-IN")}`);
+        } catch (e) { console.error("Wallet error:", e); }
+    };
+
+    const fetchEmployees = async () => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/enterprise-panel/employees/${companyId}`, { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+            const list = data.employees ?? [];
+            setTeamMembers(list.length.toString());
+            const verified = list.filter((e: any) => e.kycVerified === true).length;
+            setKycVerified(verified.toString());
+            setKycPending((list.length - verified).toString());
+        } catch (e) { console.error("Employees error:", e); }
+    };
+
+    const fetchTransactions = async () => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/enterprise-panel/transactions/${companyId}`, { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+            const list = data.transactions ?? [];
+            setTotalTransactions(list.length.toString());
+            const formatted = list.slice(0, 4).map((tx: any, i: number) => ({
+                id: tx.id || i,
+                type: tx.type === "credit" ? "credit" : "debit",
+                description: tx.description || "Transaction",
+                amount: `₹${Number(Math.abs(tx.amount)).toLocaleString("en-IN")}`,
+                date: tx.timestamp
+                    ? new Date(tx.timestamp).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+                    : "Recently",
+            }));
+            setRecentTransactions(formatted);
+        } catch (e) { console.error("Transactions error:", e); }
+    };
 
     const stats = [
-        {
-            title: "Wallet Balance",
-            value: "₹12,45,678",
-            change: "+12.5%",
-            trend: "up",
-            icon: Wallet,
-        },
-        {
-            title: "Total Transactions",
-            value: "1,234",
-            change: "+8.2%",
-            trend: "up",
-            icon: CreditCard,
-        },
-        {
-            title: "Team Members",
-            value: "24",
-            change: "+2",
-            trend: "up",
-            icon: Users,
-        },
-        {
-            title: "Pending Approvals",
-            value: "7",
-            change: "-3",
-            trend: "down",
-            icon: FileText,
-        },
-    ];
-
-    const recentTransactions = [
-        {
-            id: 1,
-            type: "credit",
-            description: "Payment from Client XYZ",
-            amount: "₹2,50,000",
-            date: "Today, 2:30 PM",
-        },
-        {
-            id: 2,
-            type: "debit",
-            description: "Vendor Payment - ABC Corp",
-            amount: "₹1,25,000",
-            date: "Today, 11:00 AM",
-        },
-        {
-            id: 3,
-            type: "credit",
-            description: "Invoice #INV-2024-001",
-            amount: "₹75,000",
-            date: "Yesterday, 4:15 PM",
-        },
-        {
-            id: 4,
-            type: "debit",
-            description: "Salary Disbursement",
-            amount: "₹8,50,000",
-            date: "Jan 15, 2024",
-        },
+        { title: "Wallet Balance", value: walletBalance, icon: Wallet, color: "bg-primary/10", iconColor: "text-primary" },
+        { title: "Total Transactions", value: totalTransactions, icon: CreditCard, color: "bg-primary/10", iconColor: "text-primary" },
+        { title: "Team Members", value: teamMembers, icon: Users, color: "bg-primary/10", iconColor: "text-primary" },
+        { title: "KYC Verified", value: kycVerified, icon: UserCheck, color: "bg-green-500/10", iconColor: "text-green-500" },
+        { title: "KYC Pending", value: kycPending, icon: UserX, color: "bg-destructive/10", iconColor: "text-destructive" },
     ];
 
     const quickActions = [
@@ -100,31 +124,42 @@ const EnterpriseDashboard = () => {
         { label: "View Reports", icon: BarChart3, variant: "outline" as const },
     ];
 
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading dashboard...</p>
+            </div>
+        </div>
+    );
+
+    if (error) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center space-y-3">
+                <p className="text-destructive font-medium">{error}</p>
+                <Button onClick={() => { localStorage.clear(); window.location.href = "/login"; }}>
+                    Login Again
+                </Button>
+            </div>
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-background">
+
             {/* Header */}
             <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
                 <div className="container flex h-16 items-center justify-between px-4">
-                    <div className="flex items-center gap-4">
-                        <Link to="/" className="flex items-center gap-2">
-                            <img
-                                src={logo}
-                                alt="SurePay Logo"
-                                className="w-8 h-8 rounded-lg object-cover"
-                            />
-                            <span className="font-semibold text-lg">SurePay</span>
-                            <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
-                                Enterprise
-                            </span>
-                        </Link>
-
-                    </div>
+                    <Link to="/" className="flex items-center gap-2">
+                        <img src={logo} alt="SurePay Logo" className="w-8 h-8 rounded-lg object-cover" />
+                        <span className="font-semibold text-lg">SurePay</span>
+                        <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">Enterprise</span>
+                    </Link>
 
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" className="relative">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-                        </Button>
+
+                        {/* ── NotificationDropdown replaces old bell button ── */}
+                        <NotificationDropdown />
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -133,24 +168,26 @@ const EnterpriseDashboard = () => {
                                         <Building2 className="w-4 h-4 text-primary" />
                                     </div>
                                     <span className="hidden md:inline text-sm font-medium">
-                                        Acme Tech
+                                        {companyName.split(" ")[0]}
                                     </span>
                                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuItem>
-                                    <Settings className="w-4 h-4 mr-2" />
-                                    Settings
+                                <DropdownMenuItem onSelect={() => {
+                                    console.log("Settings clicked");
+                                    navigate("/enterprise/settings");
+
+                                }}>
+                                    <Settings className="w-4 h-4 mr-2" />Settings
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Users className="w-4 h-4 mr-2" />
-                                    Team Management
-                                </DropdownMenuItem>
+                                <DropdownMenuItem><Users className="w-4 h-4 mr-2" />Team Management</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">
-                                    <LogOut className="w-4 h-4 mr-2" />
-                                    Sign Out
+                                <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => { localStorage.clear(); window.location.href = "/login"; }}
+                                >
+                                    <LogOut className="w-4 h-4 mr-2" />Sign Out
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -158,14 +195,11 @@ const EnterpriseDashboard = () => {
                 </div>
             </header>
 
-            {/* Main Content */}
+            {/* Main */}
             <main className="container px-4 py-8">
-                {/* Welcome Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
-                >
+
+                {/* Welcome */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                         Welcome back, {companyName}
                     </h1>
@@ -175,7 +209,7 @@ const EnterpriseDashboard = () => {
                 </motion.div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
                     {stats.map((stat, index) => {
                         const Icon = stat.icon;
                         return (
@@ -183,27 +217,15 @@ const EnterpriseDashboard = () => {
                                 key={stat.title}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
+                                transition={{ delay: index * 0.08 }}
                             >
                                 <Card>
-                                    <CardContent className="p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                                                <Icon className="w-5 h-5 text-primary" />
-                                            </div>
-                                            <span
-                                                className={`text-xs font-medium px-2 py-1 rounded ${stat.trend === "up"
-                                                    ? "bg-mint/10 text-mint"
-                                                    : "bg-destructive/10 text-destructive"
-                                                    }`}
-                                            >
-                                                {stat.change}
-                                            </span>
+                                    <CardContent className="p-5">
+                                        <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center mb-3`}>
+                                            <Icon className={`w-5 h-5 ${stat.iconColor}`} />
                                         </div>
-                                        <p className="text-sm text-muted-foreground mb-1">
-                                            {stat.title}
-                                        </p>
-                                        <p className="text-2xl font-bold">{stat.value}</p>
+                                        <p className="text-xs text-muted-foreground mb-1">{stat.title}</p>
+                                        <p className="text-xl font-bold">{stat.value}</p>
                                     </CardContent>
                                 </Card>
                             </motion.div>
@@ -212,20 +234,14 @@ const EnterpriseDashboard = () => {
                 </div>
 
                 {/* Quick Actions */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="mb-8"
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mb-8">
                     <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
                     <div className="flex flex-wrap gap-3">
                         {quickActions.map((action) => {
                             const Icon = action.icon;
                             return (
                                 <Button key={action.label} variant={action.variant} className="gap-2">
-                                    <Icon className="w-4 h-4" />
-                                    {action.label}
+                                    <Icon className="w-4 h-4" />{action.label}
                                 </Button>
                             );
                         })}
@@ -233,57 +249,38 @@ const EnterpriseDashboard = () => {
                 </motion.div>
 
                 {/* Recent Transactions */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Recent Transactions</CardTitle>
-                            <Button variant="ghost" size="sm" className="text-primary">
-                                View All
-                            </Button>
+                            <Button variant="ghost" size="sm" className="text-primary">View All</Button>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                {recentTransactions.map((transaction) => (
-                                    <div
-                                        key={transaction.id}
-                                        className="flex items-center justify-between p-4 bg-muted/30 rounded-lg"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div
-                                                className={`w-10 h-10 rounded-full flex items-center justify-center ${transaction.type === "credit"
-                                                    ? "bg-mint/10"
-                                                    : "bg-destructive/10"
-                                                    }`}
-                                            >
-                                                {transaction.type === "credit" ? (
-                                                    <ArrowDownLeft className="w-5 h-5 text-mint" />
-                                                ) : (
-                                                    <ArrowUpRight className="w-5 h-5 text-destructive" />
-                                                )}
+                            {recentTransactions.length === 0 ? (
+                                <p className="text-muted-foreground text-center py-8">No transactions yet</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {recentTransactions.map((tx: any) => (
+                                        <div key={tx.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === "credit" ? "bg-green-500/10" : "bg-destructive/10"}`}>
+                                                    {tx.type === "credit"
+                                                        ? <ArrowDownLeft className="w-5 h-5 text-green-500" />
+                                                        : <ArrowUpRight className="w-5 h-5 text-destructive" />
+                                                    }
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium">{tx.description}</p>
+                                                    <p className="text-sm text-muted-foreground">{tx.date}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-medium">{transaction.description}</p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {transaction.date}
-                                                </p>
-                                            </div>
+                                            <p className={`font-semibold ${tx.type === "credit" ? "text-green-500" : "text-foreground"}`}>
+                                                {tx.type === "credit" ? "+" : "-"}{tx.amount}
+                                            </p>
                                         </div>
-                                        <p
-                                            className={`font-semibold ${transaction.type === "credit"
-                                                ? "text-mint"
-                                                : "text-foreground"
-                                                }`}
-                                        >
-                                            {transaction.type === "credit" ? "+" : "-"}
-                                            {transaction.amount}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </motion.div>
