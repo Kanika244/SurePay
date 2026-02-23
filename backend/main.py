@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()  # Load .env before any other imports that use os.getenv
+
 from fastapi import FastAPI
 from routes.mock_otp import router as mock_otp_router
 from routes.admin import admin_router

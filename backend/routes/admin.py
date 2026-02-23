@@ -11,11 +11,12 @@ from database import (
 )
 from bson import ObjectId
 from datetime import datetime
+import os
 
 admin_router = APIRouter(prefix="/api/admin", tags=["Admin Auth"])
 
-ADMIN_EMAIL = "admin@surepay.com"
-ADMIN_PASSWORD = "secure123"
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 @admin_router.post("/login")
 async def admin_login(admin: AdminLogin):
