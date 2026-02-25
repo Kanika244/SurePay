@@ -1,6 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient # pyright: ignore[reportMissingImports] 
+import os
 
-Mongo_url = "mongodb://localhost:27017"
+Mongo_url = os.getenv("MONGO_URL","mongodb://localhost:27017")
 client = AsyncIOMotorClient(Mongo_url)
 
 database = client.get_database("SurePay")
