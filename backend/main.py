@@ -28,7 +28,9 @@ app = FastAPI()
 origins = [
     "http://localhost:8080",
     "http://192.168.0.106:8080/",
-    "https://sure-pay-five.vercel.app/"
+    "https://sure-pay-five.vercel.app/",
+    "https://sure-pay-git-dev-kanikas-projects-a9b7412c.vercel.app",
+    "https://sure-8tkv3k7hs-kanikas-projects-a9b7412c.vercel.app"
 ]
 
 app.add_middleware(
