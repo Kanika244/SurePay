@@ -38,7 +38,7 @@ const SignIn = () => {
         const formData = new FormData();
         formData.append("phone", phone);
 
-        const res = await fetch(`http://localhost:8000/api/kyc/login`, {
+        const res = await fetch(`${BASE_URL}/api/kyc/login`, {
             method: "POST",
             body: formData,
         });
