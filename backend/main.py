@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()  # Load .env before any other imports that use os.getenv
+
 from fastapi import FastAPI
 from routes.mock_otp import router as mock_otp_router
 from routes.admin import admin_router
@@ -21,6 +24,9 @@ app = FastAPI()
 origins = [
     "http://localhost:8080",
     "http://192.168.0.106:8080/",
+    "https://sure-pay-five.vercel.app/",
+    "https://sure-pay-git-dev-kanikas-projects-a9b7412c.vercel.app",
+    "https://sure-8tkv3k7hs-kanikas-projects-a9b7412c.vercel.app"
 ]
 
 app.add_middleware(

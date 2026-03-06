@@ -13,6 +13,7 @@ import {
 import logo from "@/assets/logo.jpg";
 
 type Step = "phone" | "otp";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
 const AuthIndividual = () => {
   const [step, setStep] = useState<Step>("phone");
@@ -25,7 +26,7 @@ const AuthIndividual = () => {
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:8000/auth/send_otp", {
+      const res = await fetch(`${API_BASE}/auth/send_otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
@@ -52,7 +53,7 @@ const AuthIndividual = () => {
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:8000/auth/verify-otp", {
+    const res = await fetch(`${API_BASE}/auth/verify-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, otp }),
