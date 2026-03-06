@@ -16,10 +16,6 @@ from routes.enterprise_panel import enterprise_panel_router
 from routes.integration import integration_router
 from routes.mock_otp import router as mock_otp_router
 
-
-
-
-
 app = FastAPI()
 
 origins = [
@@ -35,7 +31,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 app.include_router(authrouter,prefix="")
 app.include_router(company_router , prefix="")
 app.include_router(poc_router , prefix="")
@@ -47,7 +42,3 @@ app.include_router(enterprise_panel_router)
 #app.include_router(agent_router)
 app.include_router(integration_router)
 app.include_router(mock_otp_router)
-
-
-
-
