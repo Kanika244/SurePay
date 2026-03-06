@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 // Interfaces matching the API response shapes

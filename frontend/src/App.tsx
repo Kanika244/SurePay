@@ -7,11 +7,10 @@ import Index from "./pages/Index";
 import AuthIndividual from "./pages/AuthIndividual";
 import AuthEnterprise from "./pages/AuthEnterprise";
 import SignIn from "./pages/SignIn";
-import Dashboard from "./pages/IndividualDashboard";
-import KYCFlow from "./pages/IndividualOnboarding";
+import Dashboard from "./pages/IndividualOnboarding";
+import KYCFlow from "./pages/EnterpriseOnboarding";
 import EnterpriseOnboarding from "./pages/EnterpriseOnboarding";
 import NotFound from "./pages/NotFound";
-import ResetPassword from "./pages/ResetPassword";
 
 // Admin imports
 import { AdminProvider } from "./contexts/AdminContext";
@@ -29,6 +28,7 @@ import AuditLogs from "./pages/admin/AuditLogs";
 
 // Enterprise Panel imports
 import { EnterpriseProvider } from "./contexts/EnterpriseContext";
+import { CouponProvider } from "./contexts/CouponContext";
 import EnterpriseDashboardHome from "./pages/enterprise/EnterpriseDashboardHome";
 import EnterpriseEmployeeList from "./pages/enterprise/EnterpriseEmployeeList";
 import AddEmployee from "./pages/enterprise/AddEmployee";
@@ -39,6 +39,17 @@ import EnterpriseTransactions from "./pages/enterprise/EnterpriseTransactions";
 import EnterpriseAnalytics from "./pages/enterprise/EnterpriseAnalytics";
 import EnterpriseProfilePage from "./pages/enterprise/EnterpriseProfilePage";
 import EnterpriseSettings from "./pages/enterprise/EnterpriseSettings";
+
+// Coupon imports
+import CouponTemplates from "./pages/enterprise/coupons/CouponTemplates";
+import CouponsHub from "./pages/enterprise/coupons/CouponsHub";
+import CreateCouponTemplate from "./pages/enterprise/coupons/CreateCouponTemplate";
+import IssuedCoupons from "./pages/enterprise/coupons/IssuedCoupons";
+import RedeemedCoupons from "./pages/enterprise/coupons/RedeemedCoupons";
+import ExpiredCoupons from "./pages/enterprise/coupons/ExpiredCoupons";
+import MerchantManagement from "./pages/enterprise/coupons/MerchantManagement";
+import CouponAnalytics from "./pages/enterprise/coupons/CouponAnalytics";
+import CouponDetail from "./pages/enterprise/coupons/CouponDetail";
 
 // Individual PWA imports
 import { IndividualProvider } from "./contexts/IndividualContext";
@@ -52,13 +63,7 @@ import PWAWallet from "./pages/pwa/PWAWallet";
 import PWAAddMoney from "./pages/pwa/PWAAddMoney";
 import PWAProfile from "./pages/pwa/PWAProfile";
 import PWANotifications from "./pages/pwa/PWANotifications";
-import PWAPersonalInfo from "./pages/pwa/PWAPersonalInfo";
-import PWAKYCStatus from "./pages/pwa/PWAKYCStatus";
-import PWASurePayId from "./pages/pwa/PWASurePayId";
-import PWAChangePassword from "./pages/pwa/PWAChangePassword";
-import PWATwoFactorAuth from "./pages/pwa/PWATwoFactorAuth";
-import PWATransactionPIN from "./pages/pwa/PWATransactionPIN";
-
+import PWACoupons from "./pages/pwa/PWACoupons";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +72,7 @@ const App = () => (
     <TooltipProvider>
       <AdminProvider>
         <EnterpriseProvider>
+          <CouponProvider>
           <IndividualProvider>
             <Toaster />
             <Sonner />
@@ -79,8 +85,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/kyc" element={<KYCFlow />} />
                 <Route path="/enterprise/onboarding" element={<EnterpriseOnboarding />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-
+                
                 {/* Individual PWA Routes */}
                 <Route path="/app" element={<MobileLayout />}>
                   <Route index element={<PWAHome />} />
@@ -92,14 +97,9 @@ const App = () => (
                   <Route path="add-money" element={<PWAAddMoney />} />
                   <Route path="profile" element={<PWAProfile />} />
                   <Route path="notifications" element={<PWANotifications />} />
-                  <Route path="profile/personal-info" element={<PWAPersonalInfo />} />
-                  <Route path="profile/kyc-status" element={<PWAKYCStatus />} />
-                  <Route path="profile/surepay-id" element={<PWASurePayId />} />
-                  <Route path="profile/change-password" element={<PWAChangePassword />} />
-                  <Route path="profile/2fa" element={<PWATwoFactorAuth />} />
-                  <Route path="profile/pin" element={<PWATransactionPIN />} />
+                  <Route path="coupons" element={<PWACoupons />} />
                 </Route>
-
+                
                 {/* Enterprise Panel Routes */}
                 <Route path="/enterprise/dashboard" element={<EnterpriseDashboardHome />} />
                 <Route path="/enterprise/employees" element={<EnterpriseEmployeeList />} />
@@ -111,7 +111,19 @@ const App = () => (
                 <Route path="/enterprise/analytics" element={<EnterpriseAnalytics />} />
                 <Route path="/enterprise/profile" element={<EnterpriseProfilePage />} />
                 <Route path="/enterprise/settings" element={<EnterpriseSettings />} />
-
+                
+                {/* Coupon Routes */}
+                <Route path="/enterprise/coupons" element={<CouponsHub />} />
+                <Route path="/enterprise/coupons/templates" element={<CouponTemplates />} />
+                <Route path="/enterprise/coupons/templates/create" element={<CreateCouponTemplate />} />
+                <Route path="/enterprise/coupons/templates/:id" element={<CouponDetail />} />
+                <Route path="/enterprise/coupons/issued" element={<IssuedCoupons />} />
+                <Route path="/enterprise/coupons/issued/:id" element={<CouponDetail />} />
+                <Route path="/enterprise/coupons/redeemed" element={<RedeemedCoupons />} />
+                <Route path="/enterprise/coupons/expired" element={<ExpiredCoupons />} />
+                <Route path="/enterprise/coupons/merchants" element={<MerchantManagement />} />
+                <Route path="/enterprise/coupons/analytics" element={<CouponAnalytics />} />
+                
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/enterprises" element={<EnterpriseList />} />
@@ -124,12 +136,13 @@ const App = () => (
                 <Route path="/admin/wallets" element={<WalletManagement />} />
                 <Route path="/admin/transactions" element={<TransactionAnalytics />} />
                 <Route path="/admin/audit-logs" element={<AuditLogs />} />
-
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </IndividualProvider>
+          </CouponProvider>
         </EnterpriseProvider>
       </AdminProvider>
     </TooltipProvider>

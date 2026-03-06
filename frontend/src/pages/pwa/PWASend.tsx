@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useNavigate } from "react-router-dom";
 import { useIndividual } from "@/contexts/IndividualContext";
+import { useCoupons } from "@/contexts/CouponContext";
 import WalletCard from "@/components/pwa/WalletCard";
+import CouponSelector from "@/components/pwa/CouponSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { IssuedCoupon } from "@/data/couponMockData";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -25,6 +28,7 @@ const PWASend = () => {
         wallets, selectedWallet, setSelectedWallet,
         user, sendMoney, refreshWallet, refreshTransactions
     } = useIndividual();
+    const { issuedCoupons } = useCoupons();
 
     const [method, setMethod] = useState<SendMethod>("id");
     const [recipient, setRecipient] = useState("");
@@ -32,6 +36,7 @@ const PWASend = () => {
     const [note, setNote] = useState("");
     const [pin, setPin] = useState("");
     const [step, setStep] = useState<"form" | "pin" | "confirm">("form");
+    const [selectedCoupon, setSelectedCoupon] = useState<IssuedCoupon | null>(null);
     const [verifying, setVerifying] = useState(false);
     const [sending, setSending] = useState(false);
     const [pinError, setPinError] = useState("");
@@ -40,6 +45,9 @@ const PWASend = () => {
     const { isOnline } = useNetworkStatus();
 
     const wallet = wallets.find(w => w.id === selectedWallet) || wallets[0];
+    const couponDeduction = selectedCoupon
+        ? Math.min(Number(amount) || 0, selectedCoupon.remainingValue, selectedCoupon.maxPerTransaction ?? Infinity)
+        : 0;
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 
     const handleKey = (key: string) => {
@@ -199,6 +207,23 @@ const PWASend = () => {
                                 <span>{note}</span>
                             </div>
                         )}
+                        {selectedCoupon && (
+                            <>
+                                <div className="border-t border-border my-2" />
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Coupon Applied</span>
+                                    <span className="font-medium text-primary">{selectedCoupon.templateName}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Coupon Deduction</span>
+                                    <span className="font-medium text-mint">-₹{couponDeduction.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Remaining Balance</span>
+                                    <span className="text-foreground">₹{(selectedCoupon.remainingValue - couponDeduction).toLocaleString()}</span>
+                                </div>
+                            </>
+                        )}
                         <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">PIN</span>
                             <span className="text-emerald-500 font-medium">✓ Verified</span>
@@ -258,6 +283,16 @@ const PWASend = () => {
                     <Label>Note (optional)</Label>
                     <Textarea placeholder="What's this for?" rows={2} value={note} onChange={e => setNote(e.target.value)} />
                 </div>
+
+                {/* Coupon selector */}
+                {Number(amount) > 0 && wallet?.type === "employer" && (
+                    <CouponSelector
+                        coupons={issuedCoupons}
+                        selectedCoupon={selectedCoupon}
+                        onSelect={setSelectedCoupon}
+                        amount={Number(amount)}
+                    />
+                )}
                 <Button variant="hero" size="lg" className="w-full"
                     disabled={!recipient || !amount || Number(amount) <= 0}
                     onClick={() => setStep("pin")}>
