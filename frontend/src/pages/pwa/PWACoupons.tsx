@@ -62,6 +62,7 @@ const PWACoupons = () => {
         merchants={merchants}
         redemptions={redemptions.filter(r => r.couponId === selectedCoupon.id)}
         onBack={() => setSelectedCoupon(null)}
+        userId={user?.id}
       />
     );
   }
