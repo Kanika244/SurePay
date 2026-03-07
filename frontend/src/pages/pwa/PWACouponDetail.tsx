@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Fuel, Utensils, Hotel, MapPin, Calendar, Building2 } from "lucide-react";
+import { ArrowLeft, Fuel, Utensils, Hotel, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { IssuedCoupon, couponCategoryLabels, merchants as allMerchants, merchantCategoryLabels, couponRedemptions } from "@/data/couponMockData";
+import { IssuedCoupon, Merchant, CouponRedemption, couponCategoryLabels, merchantCategoryLabels } from "@/data/couponMockData";
 import { cn } from "@/lib/utils";
 
 const categoryConfig = {
@@ -14,20 +13,24 @@ const categoryConfig = {
 
 interface Props {
   coupon: IssuedCoupon;
+  merchants: Merchant[];          // real merchants from backend
+  redemptions: CouponRedemption[]; // real redemptions for this coupon
   onBack: () => void;
 }
 
-const PWACouponDetail = ({ coupon, onBack }: Props) => {
+const PWACouponDetail = ({ coupon, merchants, redemptions, onBack }: Props) => {
   const config = categoryConfig[coupon.couponType];
   const Icon = config.icon;
   const usedPct = coupon.originalValue > 0 ? ((coupon.originalValue - coupon.remainingValue) / coupon.originalValue) * 100 : 0;
   const amountUsed = coupon.originalValue - coupon.remainingValue;
 
-  const merchantNames = coupon.merchantRestrictionType === "category" && coupon.merchantCategory
-    ? [merchantCategoryLabels[coupon.merchantCategory]]
-    : coupon.merchantIds.map(id => allMerchants.find(m => m.id === id)?.name).filter(Boolean) as string[];
-
-  const couponTxs = couponRedemptions.filter(r => r.couponId === coupon.id);
+  // Build merchant scope display
+  const merchantNames: string[] =
+    coupon.merchantRestrictionType === "category" && coupon.merchantCategory
+      ? [merchantCategoryLabels[coupon.merchantCategory]]
+      : coupon.merchantIds
+        .map(id => merchants.find(m => m.id === id)?.name)
+        .filter(Boolean) as string[];
 
   return (
     <div className="px-4 pt-4">
@@ -67,6 +70,9 @@ const PWACouponDetail = ({ coupon, onBack }: Props) => {
             {coupon.maxPerTransaction && (
               <div className="flex justify-between"><span className="text-muted-foreground">Max per transaction</span><span className="text-foreground">₹{coupon.maxPerTransaction.toLocaleString()}</span></div>
             )}
+            {coupon.notes && (
+              <div className="flex justify-between"><span className="text-muted-foreground">Note</span><span className="text-foreground text-right max-w-[60%]">{coupon.notes}</span></div>
+            )}
           </div>
         </div>
 
@@ -82,28 +88,30 @@ const PWACouponDetail = ({ coupon, onBack }: Props) => {
         </div>
 
         {/* Merchant Scope */}
-        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><MapPin size={14} /> Merchant Scope</h3>
-          <div className="flex flex-wrap gap-2">
-            {merchantNames.map((name, i) => (
-              <Badge key={i} variant="outline" className="text-xs">{name}</Badge>
-            ))}
+        {merchantNames.length > 0 && (
+          <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><MapPin size={14} /> Merchant Scope</h3>
+            <div className="flex flex-wrap gap-2">
+              {merchantNames.map((name, i) => (
+                <Badge key={i} variant="outline" className="text-xs">{name}</Badge>
+              ))}
+            </div>
+            {coupon.merchantRestrictionType === "category" && (
+              <p className="text-xs text-muted-foreground">Valid at all {merchantNames[0]} merchants</p>
+            )}
           </div>
-          {coupon.merchantRestrictionType === "category" && (
-            <p className="text-xs text-muted-foreground">Valid at all {merchantNames[0]} merchants</p>
-          )}
-        </div>
+        )}
 
         {/* Transaction History */}
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 pb-2">
-            <h3 className="text-sm font-semibold text-foreground">Coupon Transactions</h3>
+            <h3 className="text-sm font-semibold text-foreground">Coupon Usage History</h3>
           </div>
-          {couponTxs.length === 0 ? (
+          {redemptions.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-6">No transactions yet</p>
           ) : (
             <div className="divide-y divide-border">
-              {couponTxs.map(tx => (
+              {redemptions.map(tx => (
                 <div key={tx.id} className="px-4 py-3 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">{tx.merchantName}</p>

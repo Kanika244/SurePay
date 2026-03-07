@@ -33,15 +33,15 @@ const PWAWallet = () => {
                 )}
 
                 {/* Employer wallet */}
-                {employerWallet && user.employer && (
+                {employerWallet && (
                     <div>
-                        <h2 className="text-sm font-semibold text-muted-foreground mb-2">Employer Wallet</h2>
+                        <h2 className="text-sm font-semibold text-muted-foreground mb-2">Company Wallet</h2>
                         <WalletCard wallet={employerWallet} />
                         <div className="mt-3">
                             <EmployerInfoCard
-                                name={user.employer.name}
-                                employeeId={user.employer.employeeId}
-                                department={user.employer.department}
+                                name={user.employer?.name || employerWallet.employerName || "Company"}
+                                employeeId={user.employer?.employeeId || ""}
+                                department={user.employer?.department || ""}
                                 allocatedAmount={employerWallet.monthlyLimit || 0}
                                 balance={employerWallet.balance}
                                 monthlyLimit={employerWallet.monthlyLimit || 0}

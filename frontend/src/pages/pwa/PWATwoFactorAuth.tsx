@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Shield, CheckCircle, XCircle, Mail, ChevronRight } from "lucide-react";
+import { ArrowLeft, Shield, CheckCircle, XCircle, Mail, ChevronRight, Building2, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useIndividual } from "@/contexts/IndividualContext";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const PWATwoFactorAuth = () => {
-    const { user } = useIndividual();
+    const { user, employer2FARequired } = useIndividual();
     const [enabled, setEnabled] = useState<boolean | null>(null);
     const [step, setStep] = useState<"status" | "otp">("status");
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -135,7 +135,27 @@ const PWATwoFactorAuth = () => {
                 <h1 className="text-lg font-bold text-foreground">Two-Factor Auth</h1>
             </div>
 
-            {/* ── Email gate: shown when no email is set ── */}
+            {/* ── Employer enforcement banner ── */}
+            {employer2FARequired && (
+                <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-accent/10 border border-accent/25"
+                >
+                    <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <Building2 size={15} className="text-accent" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-semibold text-foreground">Required by your employer</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            {user.employer?.name || "Your company"} requires 2FA to be active on your account.
+                            You cannot disable it while employed.
+                        </p>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* ── Email gate ── */}
             {!user.email && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                     <div className="bg-secondary/10 border border-secondary/30 rounded-xl p-5 flex flex-col items-center text-center gap-3">
@@ -163,7 +183,7 @@ const PWATwoFactorAuth = () => {
                 </motion.div>
             )}
 
-            {/* ── Main 2FA UI: shown only when email is set ── */}
+            {/* ── Main 2FA UI ── */}
             {user.email && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
 
@@ -180,20 +200,33 @@ const PWATwoFactorAuth = () => {
 
                     {step === "status" && (
                         <>
-                            <div className={`rounded-xl border p-4 flex items-center gap-4 ${enabled ? "bg-emerald-500/10 border-emerald-500/20" : "bg-muted border-border"}`}>
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${enabled ? "bg-emerald-500/10" : "bg-muted"}`}>
+                            {/* Status card */}
+                            <div className={`rounded-xl border p-4 flex items-center gap-4 ${enabled ? "bg-emerald-500/10 border-emerald-500/20" : "bg-muted border-border"
+                                }`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${enabled ? "bg-emerald-500/10" : "bg-muted"
+                                    }`}>
                                     <Shield size={22} className={enabled ? "text-emerald-500" : "text-muted-foreground"} />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <p className="text-sm font-semibold text-foreground">
                                         2FA is {enabled === null ? "checking..." : enabled ? "Enabled" : "Disabled"}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        {enabled ? "Your account has extra security" : "Add an extra layer of protection"}
+                                        {enabled
+                                            ? employer2FARequired
+                                                ? "Enabled & required by your employer"
+                                                : "Your account has extra security"
+                                            : employer2FARequired
+                                                ? "Your employer requires you to enable this"
+                                                : "Add an extra layer of protection"}
                                     </p>
                                 </div>
+                                {employer2FARequired && (
+                                    <Lock size={14} className="text-accent shrink-0" />
+                                )}
                             </div>
 
+                            {/* How it works */}
                             <div className="bg-card rounded-xl border border-border p-4 space-y-3">
                                 <h2 className="text-sm font-semibold text-foreground">How it works</h2>
                                 {[
@@ -210,15 +243,29 @@ const PWATwoFactorAuth = () => {
                                 ))}
                             </div>
 
+                            {/* Action button */}
                             {enabled ? (
-                                <Button variant="outline"
-                                    className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
-                                    onClick={disable2FA} disabled={loading}>
-                                    {loading ? "Disabling..." : "Disable 2FA"}
-                                </Button>
+                                employer2FARequired ? (
+                                    <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-muted border border-border">
+                                        <Lock size={15} className="text-muted-foreground shrink-0" />
+                                        <p className="text-xs text-muted-foreground">
+                                            2FA cannot be disabled while your employer requires it.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <Button variant="outline"
+                                        className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
+                                        onClick={disable2FA} disabled={loading}>
+                                        {loading ? "Disabling..." : "Disable 2FA"}
+                                    </Button>
+                                )
                             ) : (
-                                <Button className="w-full" onClick={sendOtp} disabled={loading || enabled === null}>
-                                    {loading ? "Sending OTP..." : "Enable 2FA"}
+                                <Button
+                                    className={`w-full ${employer2FARequired ? "ring-2 ring-accent/40" : ""}`}
+                                    onClick={sendOtp}
+                                    disabled={loading || enabled === null}
+                                >
+                                    {loading ? "Sending OTP..." : employer2FARequired ? "Enable 2FA (Required)" : "Enable 2FA"}
                                 </Button>
                             )}
                         </>

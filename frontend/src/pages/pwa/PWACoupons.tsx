@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Fuel, Utensils, Hotel } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useCoupons } from "@/contexts/CouponContext";
+import { ArrowLeft, Ticket } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useIndividual } from "@/contexts/IndividualContext";
 import CouponCard from "@/components/pwa/CouponCard";
 import PWACouponDetail from "./PWACouponDetail";
-import { IssuedCoupon } from "@/data/couponMockData";
+import { IssuedCoupon, Merchant, CouponRedemption } from "@/data/couponMockData";
+
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/enterprise/coupons`;
 
 const filterTabs = [
   { key: "all", label: "All" },
@@ -16,22 +17,53 @@ const filterTabs = [
 ];
 
 const PWACoupons = () => {
-  const { issuedCoupons } = useCoupons();
   const { user } = useIndividual();
+  const location = useLocation(); // changes every time the page is navigated to
   const [filter, setFilter] = useState("all");
   const [selectedCoupon, setSelectedCoupon] = useState<IssuedCoupon | null>(null);
 
-  // Filter coupons for this employee (mock: show all since employee IDs don't match exactly)
-  const myCoupons = issuedCoupons;
+  const [coupons, setCoupons] = useState<IssuedCoupon[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [redemptions, setRedemptions] = useState<CouponRedemption[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = myCoupons.filter(c => {
+  // Re-fetch every time the page is visited (location.key changes on each navigation)
+  useEffect(() => {
+    const fetchMyCoupons = async () => {
+      if (!user?.id) { setLoading(false); return; }
+      setLoading(true);
+      try {
+        const res = await fetch(`${API}/employee/${user.id}/my-coupons`);
+        const data = await res.json();
+        if (data.success) {
+          setCoupons(data.coupons || []);
+          setMerchants(data.merchants || []);
+          setRedemptions(data.redemptions || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch my coupons:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMyCoupons();
+  }, [user?.id, location.key]); // ← location.key re-triggers on every navigation
+
+  const filtered = coupons.filter(c => {
     if (filter === "all") return true;
     if (filter === "active") return c.status === "active" || c.status === "partially_used";
     return c.status === filter;
   });
 
   if (selectedCoupon) {
-    return <PWACouponDetail coupon={selectedCoupon} onBack={() => setSelectedCoupon(null)} />;
+    return (
+      <PWACouponDetail
+        coupon={selectedCoupon}
+        merchants={merchants}
+        redemptions={redemptions.filter(r => r.couponId === selectedCoupon.id)}
+        onBack={() => setSelectedCoupon(null)}
+      />
+    );
   }
 
   return (
@@ -48,11 +80,10 @@ const PWACoupons = () => {
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                filter === tab.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${filter === tab.key
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+                }`}
             >
               {tab.label}
             </button>
@@ -61,9 +92,19 @@ const PWACoupons = () => {
 
         {/* Coupon list */}
         <div className="space-y-3">
-          {filtered.length === 0 ? (
+          {loading ? (
             <div className="text-center py-12">
-              <p className="text-sm text-muted-foreground">No coupons found</p>
+              <p className="text-sm text-muted-foreground">Loading coupons...</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12 space-y-2">
+              <Ticket size={40} className="mx-auto text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">No coupons found</p>
+              <p className="text-xs text-muted-foreground">
+                {coupons.length === 0
+                  ? "Your employer hasn't issued any coupons yet"
+                  : "No coupons match this filter"}
+              </p>
             </div>
           ) : (
             filtered.map(coupon => (

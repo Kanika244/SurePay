@@ -19,7 +19,7 @@ const kycStatusConfig = {
 };
 
 const PWAProfile = () => {
-    const { user, logout, pendingOfflineTx } = useIndividual();
+    const { user, logout, pendingOfflineTx, employer2FARequired } = useIndividual();
     const navigate = useNavigate();
     const kycConfig = kycStatusConfig[user.kycStatus];
 
@@ -54,7 +54,13 @@ const PWAProfile = () => {
             title: "Security",
             items: [
                 { icon: Lock, label: "Change Password", sub: "Update your password", to: "/app/profile/change-password" },
-                { icon: Shield, label: "Two-Factor Auth", sub: "Email OTP verification", to: "/app/profile/2fa" },
+                {
+                    icon: Shield,
+                    label: "Two-Factor Auth",
+                    sub: employer2FARequired ? "Required by your employer" : "Email OTP verification",
+                    to: "/app/profile/2fa",
+                    badge: employer2FARequired ? { label: "Required", color: "text-accent", bg: "bg-accent/10" } : undefined,
+                },
                 { icon: Smartphone, label: "Transaction PIN", sub: "Secure your transactions", to: "/app/profile/pin" },
             ],
         },
@@ -132,6 +138,11 @@ const PWAProfile = () => {
                                             <p className="text-sm font-medium text-foreground">{item.label}</p>
                                             <p className="text-xs text-muted-foreground truncate">{item.sub}</p>
                                         </div>
+                                        {item.badge && (
+                                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${item.badge.bg} ${item.badge.color}`}>
+                                                {item.badge.label}
+                                            </span>
+                                        )}
                                         <ChevronRight size={16} className="text-muted-foreground" />
                                     </Link>
                                 </div>

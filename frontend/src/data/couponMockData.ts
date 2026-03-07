@@ -41,6 +41,7 @@ export interface CouponTemplate {
 
 export interface IssuedCoupon {
   id: string;
+  companyId?: string;            // set by backend — needed for redemption recording
   templateId: string;
   templateName: string;
   employeeId: string;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,18 +7,20 @@ import { useCoupons } from "@/contexts/CouponContext";
 import DataTable from "@/components/admin/DataTable";
 import CouponCategoryBadge from "@/components/enterprise/coupons/CouponCategoryBadge";
 import CouponStatusBadge from "@/components/enterprise/coupons/CouponStatusBadge";
-import IssueCouponModal from "@/components/enterprise/coupons/IssueCouponModal";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { CouponTemplate, merchantCategoryLabels } from "@/data/couponMockData";
 import { toast } from "@/hooks/use-toast";
 
-const CouponTemplatesContent = () => {
+interface Props {
+  onIssue: (template: CouponTemplate) => void;
+}
+
+const CouponTemplatesContent = ({ onIssue }: Props) => {
   const navigate = useNavigate();
   const { templates, merchants, deleteTemplate, toggleTemplateStatus } = useCoupons();
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [issueTemplate, setIssueTemplate] = useState<CouponTemplate | null>(null);
 
   const filtered = templates.filter(t => {
     if (typeFilter !== "all" && t.couponType !== typeFilter) return false;
@@ -48,7 +50,7 @@ const CouponTemplatesContent = () => {
       key: "actions", header: "Actions", render: (t: CouponTemplate) => (
         <div className="flex gap-1">
           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/enterprise/coupons/templates/${t.id}`); }}>View</Button>
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setIssueTemplate(t); }}>Issue</Button>
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onIssue(t); }}>Issue</Button>
           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); toggleTemplateStatus(t.id); toast({ title: `Template ${t.status === 'active' ? 'deactivated' : 'activated'}` }); }}>
             {t.status === 'active' ? 'Deactivate' : 'Activate'}
           </Button>
@@ -81,8 +83,6 @@ const CouponTemplatesContent = () => {
       </div>
 
       <DataTable data={filtered} columns={columns} searchPlaceholder="Search templates..." searchKeys={["name", "couponType"] as any} pageSize={10} />
-
-      <IssueCouponModal open={!!issueTemplate} onOpenChange={() => setIssueTemplate(null)} template={issueTemplate} />
 
       <ConfirmDialog
         open={!!deleteId}

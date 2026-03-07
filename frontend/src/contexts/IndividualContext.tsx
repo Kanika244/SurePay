@@ -88,6 +88,7 @@ interface IndividualContextType {
     login: (userId: string, phone: string) => void;
     logout: () => Promise<void>;
     loading: boolean;
+    employer2FARequired: boolean;
 }
 
 const emptyUser: IndividualUser = {
@@ -112,6 +113,7 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
     const [selectedWallet, setSelectedWallet] = useState("");
     const [pendingOfflineTx, setPendingOfflineTx] = useState<OfflineTransaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [employer2FARequired, setEmployer2FARequired] = useState(false);
 
     // ── FIXED: reactive state instead of plain constants ──
     const [userId, setUserId] = useState(() => localStorage.getItem("individual_user_id") || "");
@@ -124,7 +126,8 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
                 const res = await fetch(`${API_BASE}/api/kyc/details-by-id/${userId}`);
                 if (res.ok) {
                     const d = await res.json();
-                    setUser({
+                    setUser(prev => ({
+                        ...prev,
                         id: userId,
                         firstName: d.full_name?.split(" ")[0] || "User",
                         lastName: d.full_name?.split(" ").slice(1).join(" ") || "",
@@ -135,8 +138,7 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
                         surePayId: `${(d.full_name || "user").replace(/\s+/g, ".").toLowerCase()}@surepay`,
                         kycStatus: d.kyc_status === "SUBMITTED" ? "verified" :
                             d.kyc_status === "REJECTED" ? "rejected" : "pending",
-                        isEmployee: false,
-                    });
+                    }));
                     return;
                 }
             }
@@ -150,7 +152,8 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
                         const uRes = await fetch(`${API_BASE}/api/kyc/user/${encodeURIComponent(userPhone)}`);
                         if (uRes.ok) { const uData = await uRes.json(); email = uData.user?.email || ""; }
                     } catch { /* non-fatal */ }
-                    setUser({
+                    setUser(prev => ({
+                        ...prev,
                         id: d.user_id || userId,
                         firstName: d.full_name?.split(" ")[0] || "User",
                         lastName: d.full_name?.split(" ").slice(1).join(" ") || "",
@@ -161,8 +164,7 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
                         surePayId: `${(d.full_name || "user").replace(/\s+/g, ".").toLowerCase()}@surepay`,
                         kycStatus: d.kyc_status === "SUBMITTED" ? "verified" :
                             d.kyc_status === "REJECTED" ? "rejected" : "pending",
-                        isEmployee: false,
-                    });
+                    }));
                     if (d.user_id) {
                         localStorage.setItem("individual_user_id", d.user_id);
                         setUserId(d.user_id);
@@ -170,57 +172,106 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
                     return;
                 }
             }
-            setUser({ ...emptyUser, id: userId, phone: userPhone, firstName: "User" });
+            setUser(prev => ({ ...prev, id: userId, phone: userPhone, firstName: "User" }));
         } catch (err) {
             console.error("Failed to fetch user profile:", err);
-            setUser({ ...emptyUser, id: userId, phone: userPhone, firstName: "User" });
+            setUser(prev => ({ ...prev, id: userId, phone: userPhone, firstName: "User" }));
         }
     }, [userId, userPhone]);
 
     const fetchWallet = useCallback(async () => {
         if (!userId) return;
         try {
-            const res = await fetch(`${API_BASE}/api/v1/wallet/individual/${userId}`);
-            if (res.ok) {
-                const data = await res.json();
+            // Fetch personal wallet and company wallet in parallel
+            const [personalRes, companyRes] = await Promise.all([
+                fetch(`${API_BASE}/api/v1/wallet/individual/${userId}`),
+                fetch(`${API_BASE}/api/v1/wallet/individual/${userId}/company-wallet`),
+            ]);
+
+            const collected: WalletData[] = [];
+            let defaultWalletId = "";
+
+            // ── Personal wallet ──
+            if (personalRes.ok) {
+                const data = await personalRes.json();
                 if (data.status === "success" && data.wallet) {
                     const w = data.wallet;
-                    setWallets([{
+                    collected.push({
                         id: w.wallet_id,
                         type: "personal",
                         balance: w.balance || 0,
                         currency: w.currency || "INR",
                         frozen: w.status !== "active",
-                    }]);
-                    setSelectedWallet(w.wallet_id);
-                    return;
+                    });
+                    defaultWalletId = w.wallet_id;
                 }
             }
 
-            // No wallet found — auto-activate one for this user
-            const activateRes = await fetch(`${API_BASE}/api/v1/wallet/individual/activate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: userId }),
-            });
-            if (activateRes.ok) {
-                const activateData = await activateRes.json();
-                if (activateData.status === "success" && activateData.wallet) {
-                    const w = activateData.wallet;
-                    setWallets([{
-                        id: w.wallet_id,
-                        type: "personal",
-                        balance: w.balance || 0,
-                        currency: w.currency || "INR",
-                        frozen: w.status !== "active",
-                    }]);
-                    setSelectedWallet(w.wallet_id);
-                    return;
+            // If no personal wallet yet, auto-activate
+            if (collected.length === 0) {
+                const activateRes = await fetch(`${API_BASE}/api/v1/wallet/individual/activate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: userId }),
+                });
+                if (activateRes.ok) {
+                    const activateData = await activateRes.json();
+                    if (activateData.status === "success" && activateData.wallet) {
+                        const w = activateData.wallet;
+                        collected.push({
+                            id: w.wallet_id,
+                            type: "personal",
+                            balance: w.balance || 0,
+                            currency: w.currency || "INR",
+                            frozen: w.status !== "active",
+                        });
+                        defaultWalletId = w.wallet_id;
+                    }
                 }
             }
 
-            setWallets([{ id: "no-wallet", type: "personal", balance: 0, currency: "INR", frozen: false }]);
-            setSelectedWallet("no-wallet");
+            if (collected.length === 0) {
+                collected.push({ id: "no-wallet", type: "personal", balance: 0, currency: "INR", frozen: false });
+                defaultWalletId = "no-wallet";
+            }
+
+            // ── Company wallet ──
+            if (companyRes.ok) {
+                const companyData = await companyRes.json();
+                if (companyData.status === "success" && companyData.company_wallet) {
+                    const cw = companyData.company_wallet;
+                    collected.push({
+                        id: `EMP-${cw.employee_record_id}`,
+                        type: "employer",
+                        balance: cw.balance || 0,
+                        currency: cw.currency || "INR",
+                        frozen: cw.status === "suspended",
+                        employerName: cw.company_name,
+                        monthlyLimit: cw.spending_limit || 0,
+                        spentThisMonth: 0,
+                        maxPerTransaction: cw.spending_limit || 0,
+                    });
+                    // Update user with employer info
+                    setUser(prev => ({
+                        ...prev,
+                        isEmployee: true,
+                        employer: {
+                            name: cw.company_name,
+                            logo: cw.company_logo || "",
+                            employeeId: cw.employee_id,
+                            department: cw.department,
+                        },
+                    }));
+                    setEmployer2FARequired(cw.two_fa_required === true);
+                } else {
+                    // Not an employee — clear employer info
+                    setUser(prev => ({ ...prev, isEmployee: false, employer: undefined }));
+                    setEmployer2FARequired(false);
+                }
+            }
+
+            setWallets(collected);
+            if (defaultWalletId) setSelectedWallet(defaultWalletId);
         } catch (err) {
             console.error("Failed to fetch wallet:", err);
         }
@@ -411,6 +462,7 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
             refreshTransactions: fetchTransactions,
             retryOfflineTx,
             login, logout, loading,
+            employer2FARequired,
         }}>
             {children}
         </IndividualContext.Provider>

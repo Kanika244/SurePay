@@ -64,6 +64,12 @@ import PWAAddMoney from "./pages/pwa/PWAAddMoney";
 import PWAProfile from "./pages/pwa/PWAProfile";
 import PWANotifications from "./pages/pwa/PWANotifications";
 import PWACoupons from "./pages/pwa/PWACoupons";
+import PWAPersonalInfo from "./pages/pwa/PWAPersonalInfo";
+import PWAKYCStatus from "./pages/pwa/PWAKYCStatus";
+import PWASurePayId from "./pages/pwa/PWASurePayId";
+import PWAChangePassword from "./pages/pwa/PWAChangePassword";
+import PWATFA from "./pages/pwa/PWATwoFactorAuth";
+import PWATransactionPIN from "./pages/pwa/PWATransactionPIN";
 
 const queryClient = new QueryClient();
 
@@ -73,75 +79,81 @@ const App = () => (
       <AdminProvider>
         <EnterpriseProvider>
           <CouponProvider>
-          <IndividualProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth/individual" element={<AuthIndividual />} />
-                <Route path="/auth/enterprise" element={<AuthEnterprise />} />
-                <Route path="/auth/signin" element={<SignIn />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/kyc" element={<KYCFlow />} />
-                <Route path="/enterprise/onboarding" element={<EnterpriseOnboarding />} />
-                
-                {/* Individual PWA Routes */}
-                <Route path="/app" element={<MobileLayout />}>
-                  <Route index element={<PWAHome />} />
-                  <Route path="send" element={<PWASend />} />
-                  <Route path="receive" element={<PWAReceive />} />
-                  <Route path="scan" element={<PWAScan />} />
-                  <Route path="transactions" element={<PWATransactions />} />
-                  <Route path="wallet" element={<PWAWallet />} />
-                  <Route path="add-money" element={<PWAAddMoney />} />
-                  <Route path="profile" element={<PWAProfile />} />
-                  <Route path="notifications" element={<PWANotifications />} />
-                  <Route path="coupons" element={<PWACoupons />} />
-                </Route>
-                
-                {/* Enterprise Panel Routes */}
-                <Route path="/enterprise/dashboard" element={<EnterpriseDashboardHome />} />
-                <Route path="/enterprise/employees" element={<EnterpriseEmployeeList />} />
-                <Route path="/enterprise/employees/add" element={<AddEmployee />} />
-                <Route path="/enterprise/employees/:id" element={<EnterpriseEmployeeProfile />} />
-                <Route path="/enterprise/bulk-onboarding" element={<BulkOnboarding />} />
-                <Route path="/enterprise/wallet" element={<EnterpriseWallet />} />
-                <Route path="/enterprise/transactions" element={<EnterpriseTransactions />} />
-                <Route path="/enterprise/analytics" element={<EnterpriseAnalytics />} />
-                <Route path="/enterprise/profile" element={<EnterpriseProfilePage />} />
-                <Route path="/enterprise/settings" element={<EnterpriseSettings />} />
-                
-                {/* Coupon Routes */}
-                <Route path="/enterprise/coupons" element={<CouponsHub />} />
-                <Route path="/enterprise/coupons/templates" element={<CouponTemplates />} />
-                <Route path="/enterprise/coupons/templates/create" element={<CreateCouponTemplate />} />
-                <Route path="/enterprise/coupons/templates/:id" element={<CouponDetail />} />
-                <Route path="/enterprise/coupons/issued" element={<IssuedCoupons />} />
-                <Route path="/enterprise/coupons/issued/:id" element={<CouponDetail />} />
-                <Route path="/enterprise/coupons/redeemed" element={<RedeemedCoupons />} />
-                <Route path="/enterprise/coupons/expired" element={<ExpiredCoupons />} />
-                <Route path="/enterprise/coupons/merchants" element={<MerchantManagement />} />
-                <Route path="/enterprise/coupons/analytics" element={<CouponAnalytics />} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/enterprises" element={<EnterpriseList />} />
-                <Route path="/admin/enterprises/:id" element={<EnterpriseProfile />} />
-                <Route path="/admin/enterprises/:id/poc" element={<EnterprisePOC />} />
-                <Route path="/admin/employees" element={<EmployeeList />} />
-                <Route path="/admin/employees/:id" element={<EmployeeProfile />} />
-                <Route path="/admin/individuals" element={<IndividualList />} />
-                <Route path="/admin/individuals/:id" element={<IndividualProfile />} />
-                <Route path="/admin/wallets" element={<WalletManagement />} />
-                <Route path="/admin/transactions" element={<TransactionAnalytics />} />
-                <Route path="/admin/audit-logs" element={<AuditLogs />} />
-                
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </IndividualProvider>
+            <IndividualProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth/individual" element={<AuthIndividual />} />
+                  <Route path="/auth/enterprise" element={<AuthEnterprise />} />
+                  <Route path="/auth/signin" element={<SignIn />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/kyc" element={<KYCFlow />} />
+                  <Route path="/enterprise/onboarding" element={<EnterpriseOnboarding />} />
+
+                  {/* Individual PWA Routes */}
+                  <Route path="/app" element={<MobileLayout />}>
+                    <Route index element={<PWAHome />} />
+                    <Route path="send" element={<PWASend />} />
+                    <Route path="receive" element={<PWAReceive />} />
+                    <Route path="scan" element={<PWAScan />} />
+                    <Route path="transactions" element={<PWATransactions />} />
+                    <Route path="wallet" element={<PWAWallet />} />
+                    <Route path="add-money" element={<PWAAddMoney />} />
+                    <Route path="profile" element={<PWAProfile />} />
+                    <Route path="notifications" element={<PWANotifications />} />
+                    <Route path="coupons" element={<PWACoupons />} />
+                    <Route path="profile/personal-info" element={<PWAPersonalInfo />} />
+                    <Route path="profile/kyc-status" element={<PWAKYCStatus />} />
+                    <Route path="profile/surepay-id" element={<PWASurePayId />} />
+                    <Route path="profile/change-password" element={<PWAChangePassword />} />
+                    <Route path="profile/2fa" element={<PWATFA />} />
+                    <Route path="profile/pin" element={<PWATransactionPIN />} />
+                  </Route>
+
+                  {/* Enterprise Panel Routes */}
+                  <Route path="/enterprise/dashboard" element={<EnterpriseDashboardHome />} />
+                  <Route path="/enterprise/employees" element={<EnterpriseEmployeeList />} />
+                  <Route path="/enterprise/employees/add" element={<AddEmployee />} />
+                  <Route path="/enterprise/employees/:id" element={<EnterpriseEmployeeProfile />} />
+                  <Route path="/enterprise/bulk-onboarding" element={<BulkOnboarding />} />
+                  <Route path="/enterprise/wallet" element={<EnterpriseWallet />} />
+                  <Route path="/enterprise/transactions" element={<EnterpriseTransactions />} />
+                  <Route path="/enterprise/analytics" element={<EnterpriseAnalytics />} />
+                  <Route path="/enterprise/profile" element={<EnterpriseProfilePage />} />
+                  <Route path="/enterprise/settings" element={<EnterpriseSettings />} />
+
+                  {/* Coupon Routes */}
+                  <Route path="/enterprise/coupons" element={<CouponsHub />} />
+                  <Route path="/enterprise/coupons/templates" element={<CouponTemplates />} />
+                  <Route path="/enterprise/coupons/templates/create" element={<CreateCouponTemplate />} />
+                  <Route path="/enterprise/coupons/templates/:id" element={<CouponDetail />} />
+                  <Route path="/enterprise/coupons/issued" element={<IssuedCoupons />} />
+                  <Route path="/enterprise/coupons/issued/:id" element={<CouponDetail />} />
+                  <Route path="/enterprise/coupons/redeemed" element={<RedeemedCoupons />} />
+                  <Route path="/enterprise/coupons/expired" element={<ExpiredCoupons />} />
+                  <Route path="/enterprise/coupons/merchants" element={<MerchantManagement />} />
+                  <Route path="/enterprise/coupons/analytics" element={<CouponAnalytics />} />
+
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/enterprises" element={<EnterpriseList />} />
+                  <Route path="/admin/enterprises/:id" element={<EnterpriseProfile />} />
+                  <Route path="/admin/enterprises/:id/poc" element={<EnterprisePOC />} />
+                  <Route path="/admin/employees" element={<EmployeeList />} />
+                  <Route path="/admin/employees/:id" element={<EmployeeProfile />} />
+                  <Route path="/admin/individuals" element={<IndividualList />} />
+                  <Route path="/admin/individuals/:id" element={<IndividualProfile />} />
+                  <Route path="/admin/wallets" element={<WalletManagement />} />
+                  <Route path="/admin/transactions" element={<TransactionAnalytics />} />
+                  <Route path="/admin/audit-logs" element={<AuditLogs />} />
+
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </IndividualProvider>
           </CouponProvider>
         </EnterpriseProvider>
       </AdminProvider>
