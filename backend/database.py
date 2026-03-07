@@ -22,3 +22,9 @@ enterprise_settings_collection = database.get_collection("enterprise_settings") 
 enterprise_notifications_collection = database.get_collection("enterprise_notifications")  # Enterprise notifications
 api_keys_collection = database.get_collection("api_keys")
 erp_webhooks_collection = database.get_collection("erp_webhooks")
+
+# Coupon system collections
+coupon_merchants_collection   = database.get_collection("coupon_merchants")
+coupon_templates_collection   = database.get_collection("coupon_templates")
+issued_coupons_collection     = database.get_collection("issued_coupons")
+coupon_redemptions_collection = database.get_collection("coupon_redemptions")
