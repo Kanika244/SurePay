@@ -7,8 +7,7 @@ import Index from "./pages/Index";
 import AuthIndividual from "./pages/AuthIndividual";
 import AuthEnterprise from "./pages/AuthEnterprise";
 import SignIn from "./pages/SignIn";
-import Dashboard from "./pages/IndividualOnboarding";
-import KYCFlow from "./pages/EnterpriseOnboarding";
+import IndividualOnboarding from "./pages/IndividualOnboarding";
 import EnterpriseOnboarding from "./pages/EnterpriseOnboarding";
 import NotFound from "./pages/NotFound";
 
@@ -88,8 +87,8 @@ const App = () => (
                   <Route path="/auth/individual" element={<AuthIndividual />} />
                   <Route path="/auth/enterprise" element={<AuthEnterprise />} />
                   <Route path="/auth/signin" element={<SignIn />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/kyc" element={<KYCFlow />} />
+                  <Route path="/dashboard" element={<IndividualOnboarding />} />
+                  <Route path="/kyc" element={<IndividualOnboarding />} />
                   <Route path="/enterprise/onboarding" element={<EnterpriseOnboarding />} />
 
                   {/* Individual PWA Routes */}

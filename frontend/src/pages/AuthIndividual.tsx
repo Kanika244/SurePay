@@ -13,7 +13,7 @@ import {
 import logo from "@/assets/logo.jpg";
 
 type Step = "phone" | "otp";
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const AuthIndividual = () => {
   const [step, setStep] = useState<Step>("phone");
