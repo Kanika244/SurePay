@@ -18,7 +18,7 @@ const filterTabs = [
 
 const PWACoupons = () => {
   const { user } = useIndividual();
-  const location = useLocation(); // changes every time the page is navigated to
+  const location = useLocation();
   const [filter, setFilter] = useState("all");
   const [selectedCoupon, setSelectedCoupon] = useState<IssuedCoupon | null>(null);
 
@@ -27,7 +27,6 @@ const PWACoupons = () => {
   const [redemptions, setRedemptions] = useState<CouponRedemption[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Re-fetch every time the page is visited (location.key changes on each navigation)
   useEffect(() => {
     const fetchMyCoupons = async () => {
       if (!user?.id) { setLoading(false); return; }
@@ -47,7 +46,7 @@ const PWACoupons = () => {
       }
     };
     fetchMyCoupons();
-  }, [user?.id, location.key]); // ← location.key re-triggers on every navigation
+  }, [user?.id, location.key]);
 
   const filtered = coupons.filter(c => {
     if (filter === "all") return true;
@@ -75,7 +74,6 @@ const PWACoupons = () => {
       </div>
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-        {/* Filter tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           {filterTabs.map(tab => (
             <button
@@ -91,7 +89,6 @@ const PWACoupons = () => {
           ))}
         </div>
 
-        {/* Coupon list */}
         <div className="space-y-3">
           {loading ? (
             <div className="text-center py-12">

@@ -45,7 +45,6 @@ const PWAAddMoney = () => {
             });
             const data = await res.json();
             if (res.ok && data.status === "success") {
-                // Refresh wallet + transactions from server so the new balance is live
                 await refreshWallet();
                 await refreshTransactions();
                 setDone(true);
@@ -97,7 +96,6 @@ const PWAAddMoney = () => {
                     </div>
                 </div>
 
-                {/* Method selector */}
                 <div className="space-y-2">
                     <Label>Payment Method</Label>
                     <div className="space-y-2">

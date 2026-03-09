@@ -34,10 +34,10 @@ const categoryConfig = {
 
 interface Props {
   coupon: IssuedCoupon;
-  merchants: Merchant[]; // real merchants from backend
-  redemptions: CouponRedemption[]; // real redemptions for this coupon
+  merchants: Merchant[]; 
+  redemptions: CouponRedemption[]; 
   onBack: () => void;
-  userId?: string; // used to re-fetch fresh coupon data
+  userId?: string;
 }
 
 const PWACouponDetail = ({
@@ -47,12 +47,9 @@ const PWACouponDetail = ({
   onBack,
   userId,
 }: Props) => {
-  // liveCoupon holds the freshest known state — starts from the prop (instant render),
-  // then silently updates if the backend has a newer remaining_value.
   const [liveCoupon, setLiveCoupon] = useState<IssuedCoupon>(coupon);
 
   useEffect(() => {
-    // Re-sync with backend whenever this detail screen is shown
     if (!userId) return;
     fetch(`${API}/employee/${userId}/my-coupons`)
       .then((r) => r.json())
