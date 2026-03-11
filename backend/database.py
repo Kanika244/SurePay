@@ -1,7 +1,12 @@
 from motor.motor_asyncio import AsyncIOMotorClient # pyright: ignore[reportMissingImports] 
 import os
 
-Mongo_url = os.getenv("MONGO_URL","mongodb://localhost:27017")
+_use_local = os.getenv("USE_LOCAL", "true").strip().lower() == "true"
+_local_url  = os.getenv("MONGO_URL_LOCAL", "mongodb://localhost:27017")
+_atlas_url  = os.getenv("MONGO_URL_ATLAS", "mongodb://localhost:27017")
+Mongo_url = _local_url if _use_local else _atlas_url
+
+print(f"[DB] Connected to: {'Local' if _use_local else 'Atlas'} ({Mongo_url})")
 client = AsyncIOMotorClient(Mongo_url)
 
 database = client.get_database("SurePay")
