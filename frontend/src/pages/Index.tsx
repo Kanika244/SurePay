@@ -7,10 +7,11 @@ import EnterpriseSection from "@/components/landing/EnterpriseSection";
 import TrustSection from "@/components/landing/TrustSection";
 import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
+import PWAInstallPrompt from "@/components/landing/PWAInstallPrompt";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative pb-16 md:pb-0">
       <Header />
       <main>
         <HeroSection />
@@ -22,6 +23,7 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer />
+      <PWAInstallPrompt />
     </div>
   );
 };
