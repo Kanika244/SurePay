@@ -26,7 +26,7 @@ const AuthIndividual = () => {
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${API_BASE}/send_email_otp`, {
+      const res = await fetch(`${API_BASE}/auth/send_otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
@@ -53,11 +53,11 @@ const AuthIndividual = () => {
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch(`${API_BASE}/auth/verify-otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, otp }),
-    });
+   const res = await fetch(`${API_BASE}/verify`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ phone, otp }),
+});
     const data = await res.json();
     if (res.ok) {
 
