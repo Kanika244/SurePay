@@ -26,7 +26,7 @@ const AuthIndividual = () => {
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${API_BASE}/auth/send_otp`, {
+      const res = await fetch(`${API_BASE}/send_email_otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
