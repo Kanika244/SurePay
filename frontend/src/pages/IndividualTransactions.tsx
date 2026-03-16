@@ -14,6 +14,7 @@ import {
     Wallet,
     RefreshCw
 } from "lucide-react";
+import { API_BASE_URL } from "@/services/config";
 
 interface Transaction {
     id: string;
@@ -46,7 +47,7 @@ export default function IndividualTransactions() {
     const fetchTransactions = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost:8000/api/v1/wallet/individual/${userId}/transactions`);
+            const res = await fetch(`${API_BASE_URL}/api/v1/wallet/individual/${userId}/transactions`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.status === "success") {

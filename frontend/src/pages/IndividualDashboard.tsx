@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.jpg";
+import { API_BASE_URL } from "@/services/config";
 
 interface UserData {
     user_id: string;
@@ -105,7 +106,7 @@ const Dashboard = () => {
         try {
             // Fetch user details by phone
             const phoneToUse = phone || "";
-            const res = await fetch(`http://localhost:8000/api/kyc/user/${phoneToUse}`);
+            const res = await fetch(`${API_BASE_URL}/api/kyc/user/${phoneToUse}`);
 
             if (res.ok) {
                 const data = await res.json();
@@ -132,7 +133,7 @@ const Dashboard = () => {
     const fetchWalletData = async () => {
         if (!userId) return;
         try {
-            const res = await fetch(`http://localhost:8000/api/v1/wallet/individual/${userId}`);
+            const res = await fetch(`${API_BASE_URL}/api/v1/wallet/individual/${userId}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.status === "success" && data.wallet) {
@@ -148,7 +149,7 @@ const Dashboard = () => {
         if (!userId) return;
         setWalletActivating(true);
         try {
-            const res = await fetch("http://localhost:8000/api/v1/wallet/individual/activate", {
+            const res = await fetch(`${API_BASE_URL}/api/v1/wallet/individual/activate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ user_id: userId })
@@ -178,7 +179,7 @@ const Dashboard = () => {
 
         try {
             // First verify the code
-            const verifyRes = await fetch(`http://localhost:8000/company/verify/${companyCode}`);
+            const verifyRes = await fetch(`${API_BASE_URL}/company/verify/${companyCode}`);
             if (verifyRes.ok) {
                 const verifyData = await verifyRes.json();
                 if (!verifyData.valid) {
@@ -201,7 +202,7 @@ const Dashboard = () => {
             formData.append("user_id", userId);
             formData.append("company_code", companyCode);
 
-            const res = await fetch("http://localhost:8000/company/join", {
+            const res = await fetch(`${API_BASE_URL}/company/join`, {
                 method: "POST",
                 body: formData
             });
@@ -237,7 +238,7 @@ const Dashboard = () => {
             formData.append("user_id", userId);
             formData.append("company_code", companyCode);
 
-            const res = await fetch("http://localhost:8000/company/join", {
+            const res = await fetch(`${API_BASE_URL}/company/join`, {
                 method: "POST",
                 body: formData
             });

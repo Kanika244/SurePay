@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { API_BASE_URL } from "@/services/config";
 import {
     EnterpriseEmployee,
     EnterpriseTransaction,
     EnterpriseProfile,
 } from '@/data/enterpriseMockData';
 
-const API = 'http://localhost:8000/api/enterprise-panel';
+const API = `${API_BASE_URL}/api/enterprise-panel`;
 
 // Empty default profile — real data comes from the backend
 const emptyProfile: EnterpriseProfile = {

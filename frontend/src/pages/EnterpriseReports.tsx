@@ -35,6 +35,7 @@ import {
     Area,
     AreaChart,
 } from "recharts";
+import { API_BASE_URL } from "@/services/config";
 
 const EnterpriseReports = () => {
     const [searchParams] = useSearchParams();
@@ -79,14 +80,14 @@ const EnterpriseReports = () => {
         setIsLoading(true);
         try {
             // Fetch company info
-            const companyRes = await fetch(`http://localhost:8000/company/${companyId}`);
+            const companyRes = await fetch(`${API_BASE_URL}/company/${companyId}`);
             if (companyRes.ok) {
                 const companyData = await companyRes.json();
                 setCompanyName(companyData.legal_name || "Enterprise");
             }
 
             // Fetch reports
-            const reportsRes = await fetch(`http://localhost:8000/api/enterprise/reports/${companyId}`);
+            const reportsRes = await fetch(`${API_BASE_URL}/api/enterprise/reports/${companyId}`);
             if (reportsRes.ok) {
                 const reportsData = await reportsRes.json();
                 setReportStats({
@@ -101,7 +102,7 @@ const EnterpriseReports = () => {
             }
 
             // Fetch transactions for chart data
-            const txRes = await fetch(`http://localhost:8000/api/enterprise/transactions/${companyId}?limit=50`);
+            const txRes = await fetch(`${API_BASE_URL}/api/enterprise/transactions/${companyId}?limit=50`);
             if (txRes.ok) {
                 const txData = await txRes.json();
                 setTransactions(txData.transactions || []);

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { API_BASE_URL } from "@/services/config";
 import {
   CouponTemplate,
   IssuedCoupon,
@@ -10,7 +11,7 @@ import {
   IssuedCouponStatus,
 } from '@/data/couponMockData';
 
-const API = 'http://localhost:8000/api/enterprise/coupons';
+const API = `${API_BASE_URL}/api/enterprise/coupons`;
 
 const getCompanyId = () =>
   typeof window !== 'undefined' ? localStorage.getItem('company_id') : null;

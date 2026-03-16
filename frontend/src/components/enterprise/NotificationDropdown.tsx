@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Bell, CheckCheck, Info, CircleCheck, AlertTriangle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/services/config";
 
-const API = "http://localhost:8000/api/enterprise-panel";
+const API = `${API_BASE_URL}/api/enterprise-panel`;
 
 interface Notification {
     id: string;

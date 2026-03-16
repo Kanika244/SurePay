@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2, Bot, User, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/services/config";
 
-const API = "http://localhost:8000/api/agent";
+const API = `${API_BASE_URL}/api/agent`;
 
 interface Message {
     role: "user" | "agent";

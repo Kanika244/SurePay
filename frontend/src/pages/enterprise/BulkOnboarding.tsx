@@ -9,8 +9,9 @@ import EnterpriseLayout from "@/components/enterprise/EnterpriseLayout";
 import { sampleCSVData, csvTemplateHeaders, departments } from "@/data/enterpriseMockData";
 import { toast } from "@/hooks/use-toast";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { API_BASE_URL } from "@/services/config";
 
-const API = "http://localhost:8000/api/enterprise-panel";
+const API = `${API_BASE_URL}/api/enterprise-panel`;
 
 const AVAILABLE_EVENTS = [
     { id: "employee.created", label: "Employee Created", desc: "When a new employee is onboarded" },

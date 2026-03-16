@@ -23,6 +23,7 @@ import {
     Tooltip,
 } from "recharts";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "@/services/config";
 
 const CHART_COLORS = ["hsl(234, 89%, 54%)", "hsl(262, 83%, 58%)", "hsl(168, 76%, 42%)"];
 
@@ -63,8 +64,8 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const [statsRes, txnRes] = await Promise.all([
-                fetch("http://localhost:8000/api/admin/stats"),
-                fetch("http://localhost:8000/api/admin/transactions/recent?limit=5"),
+                fetch(`${API_BASE_URL}/api/admin/stats`),
+                fetch(`${API_BASE_URL}/api/admin/transactions/recent?limit=5`),
             ]);
 
             if (statsRes.ok) {

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { API_BASE_URL } from "@/services/config";
 
 // Interfaces matching the API response shapes
 export interface Enterprise {
@@ -128,7 +129,7 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-const API_BASE = "http://localhost:8000/api/admin";
+const API_BASE = `${API_BASE_URL}/api/admin`;
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
