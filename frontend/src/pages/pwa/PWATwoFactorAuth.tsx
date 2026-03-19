@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useIndividual } from "@/contexts/IndividualContext";
 import { Button } from "@/components/ui/button";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { API_BASE_URL as BASE_URL } from "@/services/config";
 
 const PWATwoFactorAuth = () => {
     const { user, employer2FARequired } = useIndividual();

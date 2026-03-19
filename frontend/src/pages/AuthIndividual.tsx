@@ -11,17 +11,17 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import logo from "@/assets/logo.jpg";
+import { useIndividual } from "@/contexts/IndividualContext";
+import { API_BASE_URL as API_BASE } from "@/services/config";
 
 type Step = "phone" | "otp";
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const AuthIndividual = () => {
+  const { login } = useIndividual();
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
-
-
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,35 +39,34 @@ const AuthIndividual = () => {
         setStep("otp");
       } else {
         alert(data.detail);
-
       }
     } catch (err) {
       console.error("Error sending OTP:", err);
       alert("Failed to send OTP. Please try again.");
-
     }
   };
-
-
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
 
-   const res = await fetch(`${API_BASE}/auth/verify-otp`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ phone, otp }),
-});
+    const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, otp }),
+    });
+
     const data = await res.json();
     if (res.ok) {
-
-      localStorage.setItem("individual_phone", phone);
-      if (data.user_id) localStorage.setItem("individual_user_id", data.user_id);
+      if (data.user_id) {
+        login(data.user_id, phone);
+      } else {
+        localStorage.setItem("individual_phone", phone);
+      }
 
       if (data.is_new_user) {
         navigate("/kyc");
       } else {
-        navigate("/app");  // ← also fix: was "/dashboard", should be "/app"
+        navigate("/app");
       }
     } else {
       alert(data.detail || "OTP verification failed.");

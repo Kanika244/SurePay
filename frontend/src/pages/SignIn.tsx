@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import logo from "@/assets/logo.jpg";
 import { useIndividual } from "@/contexts/IndividualContext";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { API_BASE_URL as BASE_URL } from "@/services/config";
 
 const SignIn = () => {
     const navigate = useNavigate();

@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { IssuedCoupon } from "@/data/couponMockData";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { API_BASE_URL as BASE_URL } from "@/services/config";
 const COUPON_API = `${BASE_URL}/api/enterprise/coupons`;
 
 type SendMethod = "id" | "phone" | "qr";
