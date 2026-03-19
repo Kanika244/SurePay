@@ -31,6 +31,7 @@ export interface IndividualUser {
         employeeId: string;
         department: string;
     };
+    documents: { name: string; type: string; path: string }[];
 }
 
 export interface WalletData {
@@ -95,6 +96,7 @@ const emptyUser: IndividualUser = {
     id: "", firstName: "", lastName: "", email: "",
     phone: "", dob: "", gender: "", surePayId: "",
     kycStatus: "pending", isEmployee: false,
+    documents: [],
 };
 
 const IndividualContext = createContext<IndividualContextType | null>(null);
@@ -138,6 +140,7 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
                         surePayId: `${(d.full_name || "user").replace(/\s+/g, ".").toLowerCase()}@surepay`,
                         kycStatus: d.kyc_status === "SUBMITTED" ? "verified" :
                             d.kyc_status === "REJECTED" ? "rejected" : "pending",
+                        documents: d.documents || [],
                     }));
                     return;
                 }
@@ -164,6 +167,7 @@ export const IndividualProvider = ({ children }: { children: ReactNode }) => {
                         surePayId: `${(d.full_name || "user").replace(/\s+/g, ".").toLowerCase()}@surepay`,
                         kycStatus: d.kyc_status === "SUBMITTED" ? "verified" :
                             d.kyc_status === "REJECTED" ? "rejected" : "pending",
+                        documents: d.documents || [],
                     }));
                     if (d.user_id) {
                         localStorage.setItem("individual_user_id", d.user_id);

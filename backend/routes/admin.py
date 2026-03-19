@@ -106,6 +106,17 @@ async def get_admin_enterprises():
             comp_id = str(comp["_id"])
             wallet = await wallets_collection.find_one({"company_id": comp_id})
             employee_count = await enterprise_employees_collection.count_documents({"company_id": comp_id})
+            
+            # Fetch POC
+            poc = await company_poc_collection.find_one({"company_id": comp_id})
+            poc_data = {
+                "name": poc.get("name", "") if poc else "",
+                "email": poc.get("email", "") if poc else "",
+                "phone": poc.get("phone", "") if poc else "",
+                "designation": poc.get("designation", "") if poc else "",
+                "status": poc.get("status", "pending") if poc else "pending",
+            }
+
             result.append({
                 "id": comp_id,
                 "name": comp.get("legal_name", "Unknown"),
@@ -118,6 +129,10 @@ async def get_admin_enterprises():
                 "employeeCount": employee_count,
                 "companyCode": comp.get("company_code", ""),
                 "createdAt": str(comp.get("created_at", "")),
+                "address": comp.get("registered_address", ""),
+                "country": comp.get("country", "India"),
+                "documents": comp.get("documents", []),
+                "poc": poc_data,
             })
         return {"success": True, "enterprises": result}
     except Exception as e:
@@ -208,6 +223,7 @@ async def get_admin_employees():
                 "companyId": company_id,
                 "joinedVia": "Enterprise Panel",
                 "createdAt": str(emp.get("created_at", "")),
+                "documents": emp.get("documents", []),
             })
         return {"success": True, "employees": result}
     except Exception as e:
@@ -285,6 +301,19 @@ async def get_admin_individuals():
             user_id = str(user["_id"])
             kyc = await individual_kyc_collection.find_one({"user_id": user_id})
             wallet = await individual_wallet_collection.find_one({"user_id": user_id})
+            
+            # Map KYC documents
+            documents = []
+            if kyc:
+                if kyc.get("pan_image_path"):
+                    documents.append({"name": "PAN Card", "type": "ID Proof", "path": kyc["pan_image_path"]})
+                if kyc.get("aadhaar_front_path"):
+                    documents.append({"name": "Aadhaar Front", "type": "Address Proof", "path": kyc["aadhaar_front_path"]})
+                if kyc.get("aadhaar_back_path"):
+                    documents.append({"name": "Aadhaar Back", "type": "Address Proof", "path": kyc["aadhaar_back_path"]})
+                if kyc.get("selfie_path"):
+                    documents.append({"name": "Selfie", "type": "Liveness Proof", "path": kyc["selfie_path"]})
+
             result.append({
                 "id": user_id,
                 "name": kyc.get("full_name", "") if kyc else "",
@@ -296,7 +325,7 @@ async def get_admin_individuals():
                 "kycStatus": user.get("kyc_status", "PENDING"),
                 "employerName": user.get("employer_name", ""),
                 "createdAt": str(user.get("created_at", "")),
-                "documents": [],
+                "documents": documents,
             })
         return {"success": True, "individuals": result}
     except Exception as e:

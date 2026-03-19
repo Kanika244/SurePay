@@ -153,24 +153,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (entRes.ok) {
                 const data = await entRes.json();
                 if (data.success) {
-                    setEnterprises(data.enterprises.map((e: any) => ({
-                        ...e,
-                        address: '',
-                        country: 'India',
-                        documents: [],
-                        poc: { name: '', email: '', phone: '', designation: '', status: 'pending' },
-                    })));
+                    setEnterprises(data.enterprises);
                 }
             }
 
             if (indRes.ok) {
                 const data = await indRes.json();
                 if (data.success) {
-                    setIndividuals(data.individuals.map((i: any) => ({
-                        ...i,
-                        email: '',
-                        documents: [],
-                    })));
+                    setIndividuals(data.individuals);
                 }
             }
 
@@ -180,7 +170,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     setEmployees(data.employees.map((e: any) => ({
                         ...e,
                         enterpriseId: e.companyId || '',
-                        documents: [],
                     })));
                 }
             }

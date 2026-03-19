@@ -88,7 +88,7 @@ async def get_personal_details(phone: str):
     if not kyc_record:
         raise HTTPException(status_code=404, detail="KYC record not found")
 
-    return {
+    response = {
         "user_id": user_id,
         "kyc_id": str(kyc_record["_id"]),
         "phone": phone,
@@ -98,8 +98,16 @@ async def get_personal_details(phone: str):
         "address": kyc_record.get("address", ""),
         "same_as_aadhaar": kyc_record.get("same_as_aadhaar", False),
         "kyc_status": kyc_record.get("kyc_status", ""),
-        "current_step": kyc_record.get("current_step", "")
+        "current_step": kyc_record.get("current_step", ""),
+        "documents": [
+            {"name": "PAN Card", "type": "ID Proof", "path": kyc_record.get("pan_image_path")} if kyc_record.get("pan_image_path") else None,
+            {"name": "Aadhaar Front", "type": "Address Proof", "path": kyc_record.get("aadhaar_front_path")} if kyc_record.get("aadhaar_front_path") else None,
+            {"name": "Aadhaar Back", "type": "Address Proof", "path": kyc_record.get("aadhaar_back_path")} if kyc_record.get("aadhaar_back_path") else None,
+            {"name": "Selfie", "type": "Liveness Proof", "path": kyc_record.get("selfie_path")} if kyc_record.get("selfie_path") else None,
+        ]
     }
+    response["documents"] = [d for d in response["documents"] if d]
+    return response
 
 
 @router.get("/details-by-id/{user_id}")
@@ -109,7 +117,7 @@ async def get_details_by_user_id(user_id: str):
     if not kyc_record:
         raise HTTPException(status_code=404, detail="KYC record not found")
 
-    return {
+    response = {
         "user_id": user_id,
         "kyc_id": str(kyc_record["_id"]),
         "phone": kyc_record.get("phone", ""),
@@ -119,8 +127,16 @@ async def get_details_by_user_id(user_id: str):
         "address": kyc_record.get("address", ""),
         "same_as_aadhaar": kyc_record.get("same_as_aadhaar", False),
         "kyc_status": kyc_record.get("kyc_status", ""),
-        "current_step": kyc_record.get("current_step", "")
+        "current_step": kyc_record.get("current_step", ""),
+        "documents": [
+            {"name": "PAN Card", "type": "ID Proof", "path": kyc_record.get("pan_image_path")} if kyc_record.get("pan_image_path") else None,
+            {"name": "Aadhaar Front", "type": "Address Proof", "path": kyc_record.get("aadhaar_front_path")} if kyc_record.get("aadhaar_front_path") else None,
+            {"name": "Aadhaar Back", "type": "Address Proof", "path": kyc_record.get("aadhaar_back_path")} if kyc_record.get("aadhaar_back_path") else None,
+            {"name": "Selfie", "type": "Liveness Proof", "path": kyc_record.get("selfie_path")} if kyc_record.get("selfie_path") else None,
+        ]
     }
+    response["documents"] = [d for d in response["documents"] if d]
+    return response
 
 
 @router.get("/status/{phone}")

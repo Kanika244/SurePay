@@ -68,6 +68,26 @@ const PWAKYCStatus = () => {
                     })}
                 </div>
 
+                {user.documents && user.documents.length > 0 && (
+                    <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+                        <h2 className="text-sm font-semibold text-foreground">Uploaded Documents</h2>
+                        <div className="space-y-2">
+                            {user.documents.map((doc, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-2.5 bg-muted/30 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <FileText size={16} className="text-muted-foreground" />
+                                        <div>
+                                            <p className="text-xs font-medium text-foreground">{doc.name}</p>
+                                            <p className="text-[10px] text-muted-foreground">{doc.type}</p>
+                                        </div>
+                                    </div>
+                                    <CheckCircle size={14} className="text-emerald-500" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {user.kycStatus === "rejected" && (
                     <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
                         <p className="text-sm font-medium text-destructive mb-1">KYC Rejected</p>
