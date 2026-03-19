@@ -95,6 +95,7 @@ const Dashboard = () => {
         if (userId || phone) {
             fetchUserData();
             fetchWalletData();
+            fetchTransactions();
         } else {
             // No user info, redirect to login
             navigate("/auth/signin");
@@ -142,6 +143,21 @@ const Dashboard = () => {
             }
         } catch (err) {
             console.error("Failed to fetch wallet", err);
+        }
+    };
+
+    const fetchTransactions = async () => {
+        if (!userId) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/wallet/individual/${userId}/transactions`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === "success" && data.transactions) {
+                    setTransactions(data.transactions);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch transactions", err);
         }
     };
 
@@ -537,6 +553,49 @@ const Dashboard = () => {
                         ))}
                     </div>
                 </motion.div>
+
+                {/* Recent Transactions */}
+                {transactions.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.28 }}
+                        className="mb-8"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-foreground">Recent Transactions</h2>
+                            <Link to="/transactions" className="text-sm text-primary hover:underline">View all</Link>
+                        </div>
+                        <Card>
+                            <CardContent className="p-0 divide-y divide-border">
+                                {transactions.slice(0, 5).map((tx) => (
+                                    <div key={tx.id} className="flex items-center justify-between p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                                                tx.type === "credit" ? "bg-green-500/10" : "bg-red-500/10"
+                                            }`}>
+                                                {tx.type === "credit"
+                                                    ? <ArrowDownLeft className="w-4 h-4 text-green-600" />
+                                                    : <ArrowUpRight className="w-4 h-4 text-red-500" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium">{tx.description || "Transaction"}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {tx.created_at ? new Date(tx.created_at).toLocaleDateString() : ""}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span className={`font-semibold ${
+                                            tx.type === "credit" ? "text-green-600" : "text-red-500"
+                                        }`}>
+                                            {tx.type === "credit" ? "+" : "-"}₹{tx.amount?.toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                )}
 
                 {/* Account Details */}
                 <motion.div

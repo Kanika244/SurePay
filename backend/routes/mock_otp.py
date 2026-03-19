@@ -46,25 +46,27 @@ async def verify_otp(data: PhoneOTPVerify):
 
     await individual_otp.delete_one({"phone": data.phone})
 
-    user = await individualusers.find_one({"phone":phone})
+    user = await individualusers.find_one({"phone": phone})
     is_new_user = False
     if user:
         await individualusers.update_one(
             {"phone": phone},
             {"$set": {"last_login": datetime.utcnow()}})
-
     else:
-         await individualusers.insert_one({
+        result = await individualusers.insert_one({
             "phone": phone,
             "is_phone_verified": True,
             "created_at": datetime.utcnow(),
             "last_login": datetime.utcnow(),
             "kyc_status": "NOT_STARTED"
         })
-         is_new_user = True
+        is_new_user = True
+        user = await individualusers.find_one({"_id": result.inserted_id})
 
+    user_id = str(user["_id"]) if user else ""
 
     return {
         "message": "OTP verified successfully",
-        "is_new_user": is_new_user
-        }
+        "is_new_user": is_new_user,
+        "user_id": user_id
+    }
