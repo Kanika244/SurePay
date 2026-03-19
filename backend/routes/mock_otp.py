@@ -47,6 +47,7 @@ async def verify_otp(data: PhoneOTPVerify):
     await individual_otp.delete_one({"phone": data.phone})
 
     user = await individualusers.find_one({"phone":phone})
+    is_new_user = False
     if user:
         await individualusers.update_one(
             {"phone": phone},
