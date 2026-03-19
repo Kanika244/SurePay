@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { API_BASE_URL } from "@/services/config";
 
 interface EnterpriseOTPStepProps {
     email: string;
@@ -14,20 +15,53 @@ interface EnterpriseOTPStepProps {
 
 const EnterpriseOTPStep = ({ email, otp, onUpdate, onContinue, onBack }: EnterpriseOTPStepProps) => {
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [resendMsg, setResendMsg] = useState("");
 
-    const handleVerify = () => {
+    const handleVerify = async () => {
         if (otp.length !== 6) {
             setError("Please enter the complete OTP");
             return;
         }
-        // Mock verification - always succeeds
         setError("");
-        onContinue();
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, otp }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                onContinue();
+            } else {
+                setError(data.detail || "Invalid OTP. Please try again.");
+            }
+        } catch {
+            setError("Network error. Please check your connection and try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleResend = () => {
-        // Mock resend
-        console.log("Resending OTP to", email);
+    const handleResend = async () => {
+        setResendMsg("");
+        setError("");
+        try {
+            const res = await fetch(`${API_BASE_URL}/send_email_otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            if (res.ok) {
+                setResendMsg("OTP resent successfully. Check your inbox.");
+            } else {
+                const data = await res.json();
+                setError(data.detail || "Failed to resend OTP.");
+            }
+        } catch {
+            setError("Network error. Could not resend OTP.");
+        }
     };
 
     return (
@@ -82,14 +116,17 @@ const EnterpriseOTPStep = ({ email, otp, onUpdate, onContinue, onBack }: Enterpr
                 {error && (
                     <p className="text-sm text-destructive text-center">{error}</p>
                 )}
+                {resendMsg && (
+                    <p className="text-sm text-green-600 text-center">{resendMsg}</p>
+                )}
 
                 <Button
                     onClick={handleVerify}
                     className="w-full"
                     size="lg"
-                    disabled={otp.length !== 6}
+                    disabled={otp.length !== 6 || loading}
                 >
-                    Verify & Continue
+                    {loading ? "Verifying..." : "Verify & Continue"}
                 </Button>
 
                 <p className="text-sm text-center text-muted-foreground">

@@ -4,6 +4,7 @@ import { Building2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { API_BASE_URL } from "@/services/config";
 
 interface EnterpriseEmailStepProps {
     email: string;
@@ -13,13 +14,14 @@ interface EnterpriseEmailStepProps {
 
 const EnterpriseEmailStep = ({ email, onUpdate, onContinue }: EnterpriseEmailStepProps) => {
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const validateEmail = (email: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!email) {
             setError("Please enter your company email");
             return;
@@ -29,7 +31,24 @@ const EnterpriseEmailStep = ({ email, onUpdate, onContinue }: EnterpriseEmailSte
             return;
         }
         setError("");
-        onContinue();
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/send_email_otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                onContinue();
+            } else {
+                setError(data.detail || "Failed to send OTP. Please try again.");
+            }
+        } catch {
+            setError("Network error. Please check your connection and try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -74,8 +93,8 @@ const EnterpriseEmailStep = ({ email, onUpdate, onContinue }: EnterpriseEmailSte
                     )}
                 </div>
 
-                <Button onClick={handleSubmit} className="w-full" size="lg">
-                    Send OTP
+                <Button onClick={handleSubmit} className="w-full" size="lg" disabled={loading}>
+                    {loading ? "Sending OTP..." : "Send OTP"}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
