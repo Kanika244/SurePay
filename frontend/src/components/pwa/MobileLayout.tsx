@@ -5,9 +5,11 @@ import OfflineBanner from "./OfflineBanner";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { syncPendingTransactions, getPendingSyncCount } from "@/lib/offlineSyncManager";
 import { useToast } from "@/hooks/use-toast";
+import { useIndividual } from "@/contexts/IndividualContext";
 
 const MobileLayout = () => {
     const { isOnline, wasOffline } = useNetworkStatus();
+    const { refreshWallet, refreshTransactions } = useIndividual();
     const [pendingSyncCount, setPendingSyncCount] = useState(0);
     const [isSyncing, setIsSyncing] = useState(false);
     const { toast } = useToast();
@@ -40,6 +42,7 @@ const MobileLayout = () => {
             const result = await syncPendingTransactions();
             if (result.synced > 0) {
                 toast({ title: "Transactions Synced", description: `${result.synced} transaction(s) synced successfully` });
+                await Promise.all([refreshWallet(), refreshTransactions()]);
             }
             if (result.failed > 0) {
                 toast({ title: "Sync Incomplete", description: `${result.failed} transaction(s) failed to sync`, variant: "destructive" });

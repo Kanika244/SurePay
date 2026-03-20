@@ -90,19 +90,37 @@ export async function cacheTransactions(transactions: Transaction[]): Promise<vo
   }
 }
 
-// Simulate syncing a single transaction to backend
+import { API_BASE_URL } from "@/services/config";
+
+// Real-world sync: Call the backend API
 async function syncTransaction(tx: OfflineTransaction): Promise<{ success: boolean; reason?: string }> {
-  // Simulate network request with random success/failure for demo
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 90% success rate in simulation
-      const success = Math.random() > 0.1;
-      resolve(success
-        ? { success: true }
-        : { success: false, reason: "Backend validation failed" }
-      );
-    }, 500 + Math.random() * 1000);
-  });
+  try {
+    const endpoint = tx.wallet_type === "employer" 
+      ? `${API_BASE_URL}/api/v1/wallet/individual/employer-transfer`
+      : `${API_BASE_URL}/api/v1/wallet/individual/transfer`;
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender_user_id: tx.sender_id,
+        receiver_id: tx.receiver_id,
+        amount: tx.amount,
+        note: tx.note
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.status === "success") {
+      return { success: true };
+    } else {
+      return { success: false, reason: data.detail || data.message || "Transfer failed" };
+    }
+  } catch (err) {
+    console.error("Sync Error:", err);
+    return { success: false, reason: "Network or Server Error" };
+  }
 }
 
 export interface SyncResult {

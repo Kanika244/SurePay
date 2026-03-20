@@ -416,11 +416,21 @@ async def get_company_wallet_for_user(user_id: str):
     try:
         # Get individual user record to find their phone/email
         user = await individualusers.find_one({"_id": ObjectId(user_id)})
-        if not user:
-            return {"status": "not_found", "company_wallet": None}
+        phone = ""
+        email = ""
 
-        phone = user.get("phone", "")
-        email = user.get("email", "")
+        if user:
+            phone = user.get("phone", "")
+            email = user.get("email", "")
+        else:
+            # Fallback: check KYC collection if user record is missing
+            from database import individual_kyc_collection
+            kyc = await individual_kyc_collection.find_one({"user_id": user_id})
+            if kyc:
+                phone = kyc.get("phone", "")
+                email = kyc.get("email", "")
+            else:
+                return {"status": "not_found", "company_wallet": None}
 
         # Normalize phone
         clean_phone = phone.strip().replace(" ", "").replace("-", "")
